@@ -1,18 +1,28 @@
-# CtxCache (`ctxcache`)
+# CtxCache
+
+```
+   ______ _________  __  _______   ________  ________
+  / ____//_  __/\ \/ / / ____/ | / / ____/ / / / ____/
+ / /      / /    \  / / /   /  |/ / /   / /_/ / __/
+/ /___   / /     / / / /___/ /|  / /___/ __  / /___
+\____/  /_/     /_/  \____/_/ |_/\____/_/ /_/_____/
+
+```
 
 [![CI](https://github.com/jishmisc28/ctxcache/actions/workflows/ci.yml/badge.svg)](https://github.com/jishmisc28/ctxcache/actions)
 [![PyPI version](https://img.shields.io/pypi/v/ctxcache.svg)](https://pypi.org/project/ctxcache/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
+**CtxCache** is an open source Python library that keeps an AI agent's prompt cache warm — in-process, not a gateway — and proves the bill with measurements.
 
 ## Proof video
 
-[Watch the measured proof film (122s)](https://github.com/jishmisc28/ctxcache/releases/download/proof-video/ctxcache-cost-proof.mp4) — problem → real Kimi test case → receipt.
+One real Kimi K3 run: the standing document, no-cache vs cached cost, the break when the document changes, and the receipt — **paid $0.95546138** against **$2.22368850** uncached (**saved $1.26822712**). Source: [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json). Silent cut for the README.
 
-Source numbers: [`docs/REPORT.md`](docs/REPORT.md) · [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json) · file also at [`docs/media/ctxcache-cost-proof.mp4`](docs/media/ctxcache-cost-proof.mp4)
+https://github.com/jishmisc28/ctxcache/releases/download/proof-video/ctxcache-cost-proof.mp4
 
-Kimi K3 session: paid **$0.95546138**, uncached **$2.22368850**, saved **$1.26822712**.
-
+[Download the same file](docs/media/ctxcache-cost-proof.mp4) · [Release](https://github.com/jishmisc28/ctxcache/releases/tag/proof-video) · [Live session write-up](docs/REPORT.md)
 
 An embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements.
 
