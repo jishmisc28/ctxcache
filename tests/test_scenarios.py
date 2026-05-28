@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from hearth.scenarios import Scenario, run_scenarios
+from ctxcache.scenarios import Scenario, run_scenarios
 
 
 def _by_slug() -> dict[str, Scenario]:

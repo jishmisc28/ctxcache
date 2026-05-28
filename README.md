@@ -1,23 +1,20 @@
-# Hearth (`hearth-ai`)
+# CtxCache (`ctxcache`)
 
-[![CI](https://github.com/jishmisc28/hearth/actions/workflows/ci.yml/badge.svg)](https://github.com/jishmisc28/hearth/actions)
-[![PyPI version](https://img.shields.io/pypi/v/hearth-ai.svg)](https://pypi.org/project/hearth-ai/)
+[![CI](https://github.com/jishmisc28/ctxcache/actions/workflows/ci.yml/badge.svg)](https://github.com/jishmisc28/ctxcache/actions)
+[![PyPI version](https://img.shields.io/pypi/v/ctxcache.svg)](https://pypi.org/project/ctxcache/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
 ## Proof video
 
-One real Kimi K3 run: what Hearth is for, the standing document, no-cache vs cached cost, the break when the document changes, and the receipt — **paid $0.95546138** against **$2.22368850** uncached (**saved $1.26822712**). Source: [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json).
+A clear measured proof film for CtxCache is being remade. Until it ships, see the live session numbers in [`docs/REPORT.md`](docs/REPORT.md) and [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json) (Kimi K3: paid **$0.95546138**, uncached **$2.22368850**, saved **$1.26822712**).
 
-https://github.com/user-attachments/assets/7d850e71-80c2-4a15-a6bb-309a9d7175b5
-
-[Download the same file](docs/media/hearth-cost-proof.mp4) · [Release asset](https://github.com/jishmisc28/hearth/releases/tag/proof-video) · [Live session write-up](docs/REPORT.md)
 
 An embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements.
 
 Prompt caching cuts LLM input cost and time-to-first-token (TTFT) by up to 90%, but agent loops routinely break provider caches on every turn: volatile timestamps prepended to system instructions, fluctuating tool definitions, non-deterministic JSON serialization, and uncompacted chat histories invalidate prefixes silently.
 
-Hearth wraps your existing LLM client in-process, measures cache behavior, restores stable prefix layouts, protects against regressions in CI, and traces every cache break to its exact root cause.
+CtxCache wraps your existing LLM client in-process, measures cache behavior, restores stable prefix layouts, protects against regressions in CI, and traces every cache break to its exact root cause.
 
 ---
 
@@ -35,39 +32,39 @@ Hearth wraps your existing LLM client in-process, measures cache behavior, resto
 ## Installation
 
 ```bash
-pip install hearth-ai
+pip install ctxcache
 ```
 
 See four cache failures without an API key. The prices are the simulator, not a provider bill.
 
 ```bash
-hearth scenarios
-hearth scenarios --html hearth-scenarios.html
+ctxcache scenarios
+ctxcache scenarios --html ctxcache-scenarios.html
 ```
 
 On Amazon Bedrock the Chat Completions URL that answers is `https://bedrock-runtime.us-east-1.amazonaws.com/openai/v1/chat/completions`, and the gpt-oss-120b id is `openai.gpt-oss-120b-1:0`. On 2 Nov 2026 two identical 1,699-token prompts came back with no cached-token field. Optimize mode still moves a clock out of the system message. It does not invent a cache discount the provider did not report.
 
-Nova Micro on the Converse API did return a cache read. Through `hearth.wrap` in observe mode, the second identical call reported 3,601 cached input tokens and 6 uncached tokens. The dollar cost is not stated here, because this model has no sourced price in `providers.toml` yet.
+Nova Micro on the Converse API did return a cache read. Through `ctxcache.wrap` in observe mode, the second identical call reported 3,601 cached input tokens and 6 uncached tokens. The dollar cost is not stated here, because this model has no sourced price in `providers.toml` yet.
 
 Optional provider and integration extras:
 ```bash
-pip install "hearth-ai[anthropic,openai,gemini,langchain,pydantic-ai,openai-agents,otel]"
+pip install "ctxcache[anthropic,openai,gemini,langchain,pydantic-ai,openai-agents,otel]"
 ```
 
 ---
 
 ## Operating Modes
 
-Hearth operates in three explicit modes configured via `hearth.wrap(client, mode=...)`:
+CtxCache operates in three explicit modes configured via `ctxcache.wrap(client, mode=...)`:
 
 ### 1. `observe` Mode (Byte-Identical Passthrough)
-Passes all requests to the underlying provider byte-for-byte with zero modifications (claim C-03). Records request fingerprints, traces, and exact token economics (`read`, `write`, `uncached`) to a local SQLite ledger (`~/.hearth/ledger.sqlite`) and optional JSONL traces.
+Passes all requests to the underlying provider byte-for-byte with zero modifications (claim C-03). Records request fingerprints, traces, and exact token economics (`read`, `write`, `uncached`) to a local SQLite ledger (`~/.ctxcache/ledger.sqlite`) and optional JSONL traces.
 
 ```python
-import hearth
+import ctxcache
 from anthropic import Anthropic
 
-client = hearth.wrap(Anthropic(), mode="observe")
+client = ctxcache.wrap(Anthropic(), mode="observe")
 # Byte-identical request execution with transparent telemetry
 response = client.messages.create(
     model="claude-3-5-sonnet-20241022",
@@ -80,7 +77,7 @@ response = client.messages.create(
 Adds, removes, or modifies no prompt or tool text (claim C-04). Restores the first-seen tool order and injects cache breakpoints/metadata strictly matching provider rules (e.g. Anthropic `cache_control` breakpoints, OpenAI cache keys).
 
 ```python
-client = hearth.wrap(Anthropic(), mode="safe")
+client = ctxcache.wrap(Anthropic(), mode="safe")
 ```
 
 ### 3. `optimize` Mode (Active Context Engineering)
@@ -90,21 +87,21 @@ Performs structured context layout optimizations:
 - **Planned History Compaction:** Compares the one-time summary rewrite penalty against expected remaining turns ($k^* \approx 8.0$ calls) to compact history only when it yields net cost savings (claim C-09).
 
 ```python
-client = hearth.wrap(Anthropic(), mode="optimize")
+client = ctxcache.wrap(Anthropic(), mode="optimize")
 ```
 
 ---
 
 ## Framework Integrations
 
-Hearth integrates into modern agent frameworks with minimal setup (claim C-10):
+CtxCache integrates into modern agent frameworks with minimal setup (claim C-10):
 
 ### LangGraph / LangChain
 ```python
-from hearth.integrations.langgraph import HearthMiddleware
+from ctxcache.integrations.langgraph import CtxCacheMiddleware
 
 # Intercept and stabilize state inside your graph node
-middleware = HearthMiddleware(mode="safe")
+middleware = CtxCacheMiddleware(mode="safe")
 processed_state = middleware(state)
 ```
 
@@ -112,7 +109,7 @@ processed_state = middleware(state)
 ```python
 from anthropic import Anthropic
 from pydantic_ai.models.anthropic import AnthropicModel
-from hearth.integrations.pydantic_ai import wrap_pydantic_ai_client
+from ctxcache.integrations.pydantic_ai import wrap_pydantic_ai_client
 
 # Wrap client before passing to Pydantic AI model
 wrapped_client = wrap_pydantic_ai_client(Anthropic(), mode="optimize")
@@ -122,7 +119,7 @@ model = AnthropicModel("claude-3-5-sonnet-20241022", anthropic_client=wrapped_cl
 ### OpenAI Agents SDK
 ```python
 from openai import OpenAI
-from hearth.integrations.openai_agents import set_default_openai_client
+from ctxcache.integrations.openai_agents import set_default_openai_client
 
 # Set wrapped client as default for all Agents SDK workflows
 set_default_openai_client(OpenAI())
@@ -166,7 +163,7 @@ hearth bench --report
 
 ## Core Invariants
 
-Hearth strictly enforces 13 formal invariants verified on every commit:
+CtxCache strictly enforces 13 formal invariants verified on every commit:
 
 1. **`INV-01` (Byte-Identical Passthrough):** `observe` mode sends byte-identical requests.
 2. **`INV-02` (Content Equivalence):** `safe` mode modifies no message or tool text.
@@ -174,7 +171,7 @@ Hearth strictly enforces 13 formal invariants verified on every commit:
 4. **`INV-04` (Append-Only History):** No already-sent message is mutated except via explicit compaction events.
 5. **`INV-05` (Action Reporting):** Every layout relocation and ordering restoration is recorded and reported.
 6. **`INV-06` (Exact Token Accounting):** `read + write + uncached == total_input` strictly reconciles for Anthropic, OpenAI, and Gemini.
-7. **`INV-07` (Fail-Open):** Any internal error passes original requests through unmodified and records `hearth_error`.
+7. **`INV-07` (Fail-Open):** Any internal error passes original requests through unmodified and records `ctxcache_error`.
 8. **`INV-08` (Zero Network Exfiltration):** No outbound network calls except to wrapped LLM providers and optional OTLP endpoints.
 9. **`INV-09` (Privacy by Default):** Prompt content is never stored in ledgers, spans, or logs (`record=True` required for debug traces).
 10. **`INV-10` (Honest Attribution):** TTL expiry, provider cold-starts, and below-minimum length are never attributed as user breaks.

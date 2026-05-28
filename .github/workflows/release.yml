@@ -1,6 +1,6 @@
 name: publish
 
-# Publishes hearth-ai when a v* tag is pushed.
+# Publishes ctxcache when a v* tag is pushed.
 # PyPI must trust this repository (trusted publishing, environment name: pypi)
 # before the first tag. Pushing the tag is the publish.
 on:

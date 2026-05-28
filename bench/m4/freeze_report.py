@@ -16,10 +16,10 @@ if str(_REPO_ROOT / "src") not in sys.path:
 
 from bench.tasks.registry import get_all_tasks  # noqa: E402
 from bench.templates.typical import render_typical_template  # noqa: E402
-from hearth.cost import compute_call_cost  # noqa: E402
-from hearth.guard import PrefixGuard  # noqa: E402
-from hearth.layout import optimize_layout  # noqa: E402
-from hearth.sim.cache_sim import CacheSimulator, compute_calibration_mae  # noqa: E402
+from ctxcache.cost import compute_call_cost  # noqa: E402
+from ctxcache.guard import PrefixGuard  # noqa: E402
+from ctxcache.layout import optimize_layout  # noqa: E402
+from ctxcache.sim.cache_sim import CacheSimulator, compute_calibration_mae  # noqa: E402
 
 
 def generate_cache_efficiency_report() -> dict[str, Any]:
@@ -156,7 +156,7 @@ def generate_cache_efficiency_report() -> dict[str, Any]:
                 fw_stock_cost += cost_s1.actual_cost + cost_s2.actual_cost
                 fw_stock_passed += 1
 
-                # --- Hearth Optimize Simulation ---
+                # --- CtxCache Optimize Simulation ---
                 sim_opt = CacheSimulator(provider=p_name, model=m_name)
                 opt_sys1, opt_msgs1, _ = optimize_layout(
                     system=sys_stock,
@@ -248,7 +248,7 @@ def generate_cache_efficiency_report() -> dict[str, Any]:
 
     # Format REPORT.md
     report_content = f"""# Cache Efficiency Report v1
-**Data Frozen:** 2026-10-19 · Hearth Milestone 4 (M4)
+**Data Frozen:** 2026-10-19 · CtxCache Milestone 4 (M4)
 **Scope:** 4 Frameworks × 2 Providers across 20 Pre-Registered Tasks (160 Evaluated Sessions)
 
 ---
@@ -257,7 +257,7 @@ def generate_cache_efficiency_report() -> dict[str, Any]:
 
 Stock agent implementations systematically defeat prompt caching across all major frameworks. Dynamic runtime context (timestamps, request IDs) placed in the static prefix combined with unmanaged tool order produces near-zero cache read shares under default configurations.
 
-Applying **Hearth Optimize** relocates volatile elements out of the prefix, stabilizes tool definitions, and enforces content-addressed offloading without altering model behavior.
+Applying **CtxCache Optimize** relocates volatile elements out of the prefix, stabilizes tool definitions, and enforces content-addressed offloading without altering model behavior.
 
 - **Overall Cost Reduction:** **{overall_savings_pct:.1f}%** across all evaluated frameworks and providers.
 - **Cache Read Share:** Increased from **0.0%** (Stock typical) to **48.9%** overall session average (with 100% prefix read hits on subsequent turns).
@@ -293,7 +293,7 @@ Out of all prefix breaks observed in unmanaged stock executions, breaks were cat
 
 | Break Cause Code | Level | Attribution | Occurrences | Primary Remediation |
 |---|---|---|:---:|---|
-| `volatile_in_prefix` | system | User/Agent | {cause_counts.get("volatile_in_prefix", 0)} | `hearth.volatile(...)` or `mode="optimize"` layout relocation |
+| `volatile_in_prefix` | system | User/Agent | {cause_counts.get("volatile_in_prefix", 0)} | `ctxcache.volatile(...)` or `mode="optimize"` layout relocation |
 | `tools_reordered` | tools | Framework | {cause_counts.get("tools_reordered", 0)} | `mode="safe"` automatic tool order restoration |
 | `history_rewritten` | messages | Agent | 0 | `mode="safe"` append-only history enforcement |
 | `params_changed` | params | User | 0 | PrefixGuard divergence warning |
@@ -314,7 +314,7 @@ Out of all prefix breaks observed in unmanaged stock executions, breaks were cat
 This report is deterministic and verifiable from the repository:
 
 ```bash
-python -m hearth.bench.runner --m4 --verify
+python -m ctxcache.bench.runner --m4 --verify
 ```
 """
 

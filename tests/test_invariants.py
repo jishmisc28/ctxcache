@@ -1,4 +1,4 @@
-"""Tests for Hearth invariants specified in BUILD_HANDBOOK section 8."""
+"""Tests for CtxCache invariants specified in BUILD_HANDBOOK section 8."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-import hearth
-from hearth.fingerprint import fingerprint_message, rolling_segment_hash
-from hearth.trace import TraceRecorder
+import ctxcache
+from ctxcache.fingerprint import fingerprint_message, rolling_segment_hash
+from ctxcache.trace import TraceRecorder
 
 
 class MockResponse:
@@ -47,7 +47,7 @@ def test_observe_passthrough_bytes(tmp_path: Path) -> None:
     """INV-01: observe sends byte-identical requests."""
     underlying = MockClient()
     recorder = TraceRecorder(trace_dir=tmp_path)
-    client = hearth.wrap(underlying, mode="observe", recorder=recorder)
+    client = ctxcache.wrap(underlying, mode="observe", recorder=recorder)
 
     original_kwargs = {
         "model": "gemini-2.5-flash",
@@ -71,7 +71,7 @@ def test_no_content_by_default(tmp_path: Path) -> None:
     recorder = TraceRecorder(trace_dir=tmp_path)
 
     # 1. Default: record=False
-    client_default = hearth.wrap(underlying, mode="observe", record=False, recorder=recorder)
+    client_default = ctxcache.wrap(underlying, mode="observe", record=False, recorder=recorder)
     client_default.create(
         model="gemini-2.5-flash",
         messages=[{"role": "user", "content": "SUPER_SECRET_PROMPT_CONTENT_XYZ"}],
@@ -87,7 +87,7 @@ def test_no_content_by_default(tmp_path: Path) -> None:
     assert "body" not in trace_entry
 
     # 2. Explicit: record=True
-    client_recorded = hearth.wrap(underlying, mode="observe", record=True, recorder=recorder)
+    client_recorded = ctxcache.wrap(underlying, mode="observe", record=True, recorder=recorder)
     client_recorded.create(
         model="gemini-2.5-flash",
         messages=[{"role": "user", "content": "RECORDED_PROMPT_CONTENT_123"}],
@@ -109,7 +109,7 @@ def test_safe_no_content_change(tmp_path: Path) -> None:
     """INV-02: safe adds, removes or changes no message or tool content; only caching metadata and first-seen-order restoration."""
     underlying = MockClient()
     recorder = TraceRecorder(trace_dir=tmp_path)
-    client = hearth.wrap(underlying, mode="safe", recorder=recorder)
+    client = ctxcache.wrap(underlying, mode="safe", recorder=recorder)
 
     tool_a = {"name": "tool_a", "description": "Tool A"}
     tool_b = {"name": "tool_b", "description": "Tool B"}
@@ -168,7 +168,7 @@ def test_append_only(tmp_path: Path) -> None:
     """INV-04: No already-sent message is changed except by a recorded compaction."""
     underlying = MockClient()
     recorder = TraceRecorder(trace_dir=tmp_path)
-    client = hearth.wrap(underlying, mode="safe", recorder=recorder)
+    client = ctxcache.wrap(underlying, mode="safe", recorder=recorder)
 
     msg1 = {"role": "user", "content": "Message 1"}
     msg2 = {"role": "assistant", "content": "Response 1"}
@@ -195,13 +195,13 @@ def test_append_only(tmp_path: Path) -> None:
 
 def test_changes_reported(tmp_path: Path) -> None:
     """INV-05: Every optimize move and safe order restoration is recorded and reported."""
-    from hearth.tools import READ_OFFLOADED_TOOL_DEF
+    from ctxcache.tools import READ_OFFLOADED_TOOL_DEF
 
     recorder = TraceRecorder(trace_dir=tmp_path)
     underlying = MockClient()
 
     # 1. Test safe mode tool order restoration recording
-    client_safe = hearth.wrap(underlying, mode="safe", recorder=recorder)
+    client_safe = ctxcache.wrap(underlying, mode="safe", recorder=recorder)
     tool_a = {"name": "tool_a", "description": "a"}
     tool_b = {"name": "tool_b", "description": "b"}
 
@@ -227,7 +227,7 @@ def test_changes_reported(tmp_path: Path) -> None:
     assert any(c.get("kind") == "tool_order_restored" for c in changes_call2)
 
     # 2. Test optimize mode volatile relocation and tool offload recording
-    client_opt = hearth.wrap(underlying, mode="optimize", recorder=recorder)
+    client_opt = ctxcache.wrap(underlying, mode="optimize", recorder=recorder)
     tools_with_offload = [tool_a, READ_OFFLOADED_TOOL_DEF]
 
     # Large tool output (> 2000 tokens ~ 8000 chars)
@@ -266,7 +266,7 @@ def test_changes_reported(tmp_path: Path) -> None:
 
 def test_usage_reconciles_anthropic() -> None:
     """INV-06: read + write + uncached equals Anthropic's total input exactly."""
-    from hearth.adapters.anthropic import parse_anthropic_usage
+    from ctxcache.adapters.anthropic import parse_anthropic_usage
 
     raw = {
         "input_tokens": 5000,
@@ -284,7 +284,7 @@ def test_usage_reconciles_anthropic() -> None:
 
 def test_usage_reconciles_openai() -> None:
     """INV-06: read + write + uncached equals OpenAI's total input exactly."""
-    from hearth.adapters.openai import parse_openai_usage
+    from ctxcache.adapters.openai import parse_openai_usage
 
     raw = {
         "prompt_tokens": 4000,
@@ -302,7 +302,7 @@ def test_usage_reconciles_openai() -> None:
 
 def test_usage_reconciles_gemini() -> None:
     """INV-06: read + write + uncached equals Gemini's total input exactly."""
-    from hearth.adapters.gemini import parse_gemini_usage
+    from ctxcache.adapters.gemini import parse_gemini_usage
 
     raw = {
         "prompt_token_count": 6000,
@@ -317,16 +317,16 @@ def test_usage_reconciles_gemini() -> None:
 
 
 def test_fail_open(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """INV-07: Fail-open: internal error sends original request unchanged and records hearth_error."""
-    from hearth.wrapper import WrappedMethod
+    """INV-07: Fail-open: internal error sends original request unchanged and records ctxcache_error."""
+    from ctxcache.wrapper import WrappedMethod
 
     underlying = MockClient()
     recorder = TraceRecorder(trace_dir=tmp_path)
-    client = hearth.wrap(underlying, mode="safe", recorder=recorder)
+    client = ctxcache.wrap(underlying, mode="safe", recorder=recorder)
 
     # Monkeypatch internal processing to simulate unexpected internal exception
     def broken_process(*args: Any, **kwargs: Any) -> Any:
-        raise RuntimeError("Simulated internal bug in Hearth engine")
+        raise RuntimeError("Simulated internal bug in CtxCache engine")
 
     monkeypatch.setattr(WrappedMethod, "_process_safe_request", broken_process)
 
@@ -342,11 +342,11 @@ def test_fail_open(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert underlying.call_count == 1
     assert underlying.last_kwargs["messages"] is orig_msg
 
-    # Verify hearth_error recorded in trace
+    # Verify ctxcache_error recorded in trace
     trace_file = tmp_path / "s-failopen-1.jsonl"
     assert trace_file.exists()
     trace_data = json.loads(trace_file.read_text(encoding="utf-8").strip())
-    assert "hearth_error" in trace_data.get("breaks", [{}])[0].get("cause", "")
+    assert "ctxcache_error" in trace_data.get("breaks", [{}])[0].get("cause", "")
 
 
 def test_no_extra_network(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -354,13 +354,13 @@ def test_no_extra_network(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     import socket
 
     def forbidden_connect(*args: Any, **kwargs: Any) -> None:
-        raise AssertionError("Unexpected outgoing network socket opened by Hearth core!")
+        raise AssertionError("Unexpected outgoing network socket opened by CtxCache core!")
 
     monkeypatch.setattr(socket.socket, "connect", forbidden_connect)
 
     underlying = MockClient()
     recorder = TraceRecorder(trace_dir=tmp_path)
-    client = hearth.wrap(underlying, mode="safe", recorder=recorder)
+    client = ctxcache.wrap(underlying, mode="safe", recorder=recorder)
 
     # Creating and making calls should not open network connections
     resp = client.create(
@@ -373,7 +373,7 @@ def test_no_extra_network(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
 
 def test_break_attribution() -> None:
     """INV-10: below_minimum, short_session, ttl_expired, provider_miss not user-caused."""
-    from hearth.guard import is_user_caused
+    from ctxcache.guard import is_user_caused
 
     # Provider and environmental causes are NEVER user-caused
     assert not is_user_caused("below_minimum")
@@ -392,8 +392,8 @@ def test_break_attribution() -> None:
 
 def test_planner_limits() -> None:
     """INV-11: Planner limits are respected (4 Anthropic breakpoints; 1-hour entries before 5-minute ones)."""
-    from hearth.planner import CachePlan, plan_breakpoints
-    from hearth.segments import Segment, StabilityClass
+    from ctxcache.planner import CachePlan, plan_breakpoints
+    from ctxcache.segments import Segment, StabilityClass
 
     # 1. Test max 4 breakpoints
     # Create 6 candidate message segments
@@ -435,7 +435,7 @@ def test_planner_limits() -> None:
 
 def test_memory_supersede(tmp_path: Path) -> None:
     """INV-12: Memory facts are superseded, never silently overwritten."""
-    from hearth.memory import MemoryStore
+    from ctxcache.memory import MemoryStore
 
     store = MemoryStore(db_path=tmp_path / "memory.sqlite")
 
@@ -490,8 +490,8 @@ def test_memory_supersede(tmp_path: Path) -> None:
 
 def test_memory_no_session_mutation(tmp_path: Path) -> None:
     """INV-12: Mid-session memory writes never change SESSION."""
-    import hearth
-    from hearth.memory import MemoryStore
+    import ctxcache
+    from ctxcache.memory import MemoryStore
 
     store = MemoryStore(db_path=tmp_path / "memory.sqlite")
 
@@ -506,7 +506,7 @@ def test_memory_no_session_mutation(tmp_path: Path) -> None:
     )
 
     # Start session 1: pinned facts are loaded into SESSION prefix
-    with hearth.session("session-worker-1") as s:
+    with ctxcache.session("session-worker-1") as s:
         # Pinned facts loaded once at session start
         pinned_text = store.get_pinned_session_text(scope="project-x", subjects=["database"])
         assert "database engine PostgreSQL" in pinned_text
@@ -543,7 +543,7 @@ def test_cost_decimal() -> None:
     """INV-13: Money is computed in Decimal, never float."""
     from decimal import Decimal
 
-    from hearth.cost import compute_call_cost
+    from ctxcache.cost import compute_call_cost
 
     cost = compute_call_cost(
         provider="gemini",
@@ -567,7 +567,7 @@ def test_nova_micro_cache_read_costs_a_quarter_of_input() -> None:
     """Nova Micro cache reads are priced at 0.25x input in the US East price list."""
     from decimal import Decimal
 
-    from hearth.cost import compute_call_cost
+    from ctxcache.cost import compute_call_cost
 
     cost = compute_call_cost(
         provider="bedrock",
@@ -585,7 +585,7 @@ def test_kimi_k3_cache_read_costs_one_tenth_of_input() -> None:
     """Kimi K3 cache reads are priced at 0.10x input in the US East price list."""
     from decimal import Decimal
 
-    from hearth.cost import compute_call_cost
+    from ctxcache.cost import compute_call_cost
 
     cost = compute_call_cost(
         provider="bedrock",
@@ -603,7 +603,7 @@ def test_nova_pro_cache_read_costs_a_quarter_of_input() -> None:
     """Nova Pro cache reads are priced at 0.25x input in the US East price list."""
     from decimal import Decimal
 
-    from hearth.cost import compute_call_cost
+    from ctxcache.cost import compute_call_cost
 
     cost = compute_call_cost(
         provider="bedrock",

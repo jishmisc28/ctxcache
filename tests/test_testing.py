@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import hearth
-from hearth.testing import FakeProvider
+import ctxcache
+from ctxcache.testing import FakeProvider
 
 
 def test_fake_provider_gemini_caching() -> None:
@@ -100,13 +100,13 @@ def test_fake_provider_anthropic_caching() -> None:
 
 def test_wrap_default_mode_is_safe() -> None:
     fake = FakeProvider(provider="gemini", model="gemini-2.5-flash")
-    wrapped = hearth.wrap(fake)
+    wrapped = ctxcache.wrap(fake)
     assert wrapped.mode == "safe"
 
 
-def test_fake_provider_wrapped_by_hearth() -> None:
+def test_fake_provider_wrapped_by_ctxcache() -> None:
     fake = FakeProvider(provider="gemini", model="gemini-2.5-flash")
-    wrapped = hearth.wrap(fake, mode="safe")
+    wrapped = ctxcache.wrap(fake, mode="safe")
 
     long_sys = "System instructions: " + ("Guide for operations. " * 250)
     resp = wrapped.models.generate_content(

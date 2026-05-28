@@ -3,21 +3,21 @@
 ## Setup (Abhranshu, about 5 minutes)
 
 ```bash
-mkdir -p ~/code && unzip ~/Downloads/hearth-handoff.zip -d ~/code && cd ~/code/hearth   # CLAUDE.md, docs/, gtm/, prompts/
+mkdir -p ~/code && unzip ~/Downloads/ctxcache-handoff.zip -d ~/code && cd ~/code/ctxcache   # CLAUDE.md, docs/, gtm/, prompts/
 ln -s CLAUDE.md AGENTS.md
 printf '.env\ngtm/private/\n' > .gitignore
-git init -b main && git add -A && git commit -m "docs: hearth handoff pack"
+git init -b main && git add -A && git commit -m "docs: ctxcache handoff pack"
 brew install uv vhs gh; uv --version
 # put provider keys in a local .env (never committed): ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY (from M2)
 ```
 
-Start your coding agent in `~/code/hearth` with the strongest model, and paste the prompt below.
+Start your coding agent in `~/code/ctxcache` with the strongest model, and paste the prompt below.
 
 ## Prompt (paste everything between the lines)
 
 ---
 
-You are the build engineer for **Hearth**, a Python library that keeps an AI agent's prompt cache warm and proves it with measurements. You work autonomously through a fixed plan, and I review at gates.
+You are the build engineer for **CtxCache**, a Python library that keeps an AI agent's prompt cache warm and proves it with measurements. You work autonomously through a fixed plan, and I review at gates.
 
 **Read fully, in this order:**
 1. `CLAUDE.md` (your rules; they override everything else);
@@ -57,7 +57,7 @@ You are the build engineer for **Hearth**, a Python library that keeps an AI age
 **Start now.** Your first message to me must contain exactly three things:
 1. the M0 API budget you propose, with your token estimate;
 2. the question: GitHub owner `jishmisc28` or `ab-atnms`?;
-3. whether `hearth-ai` is free on PyPI (run `pip index versions hearth-ai`).
+3. whether `ctxcache` is free on PyPI (run `pip index versions ctxcache`).
 
 While you wait, build the parts of M0 that need no API calls.
 

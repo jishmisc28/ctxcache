@@ -1,4 +1,4 @@
-"""Hearth arguments stay out of provider calls that do not accept them.
+"""CtxCache arguments stay out of provider calls that do not accept them.
 
 Gemini sends the prompt in ``contents``. The guard has to see that text.
 """
@@ -11,15 +11,15 @@ from typing import Any
 
 import pytest
 
-import hearth
-from hearth.segments import contents_as_messages
-from hearth.trace import TraceRecorder
+import ctxcache
+from ctxcache.segments import contents_as_messages
+from ctxcache.trace import TraceRecorder
 
 
 def test_gemini_generate_content_does_not_receive_session_id(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("HEARTH_HOME", str(tmp_path))
+    monkeypatch.setenv("CTXCACHE_HOME", str(tmp_path))
 
     class Models:
         def __init__(self) -> None:
@@ -34,7 +34,7 @@ def test_gemini_generate_content_does_not_receive_session_id(
             self.models = Models()
 
     client = Client()
-    wrapped = hearth.wrap(client, mode="safe")
+    wrapped = ctxcache.wrap(client, mode="safe")
     wrapped.models.generate_content(
         model="gemini-2.5-flash",
         contents="Hello",
@@ -49,7 +49,7 @@ def test_gemini_generate_content_does_not_receive_session_id(
 def test_openai_create_still_receives_prompt_cache_key(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("HEARTH_HOME", str(tmp_path))
+    monkeypatch.setenv("CTXCACHE_HOME", str(tmp_path))
 
     class ChatCompletions:
         def __init__(self) -> None:
@@ -68,7 +68,7 @@ def test_openai_create_still_receives_prompt_cache_key(
             self.chat = _Chat()
 
     client = Client()
-    wrapped = hearth.wrap(client, mode="safe")
+    wrapped = ctxcache.wrap(client, mode="safe")
     wrapped.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": "Hello"}],
@@ -77,7 +77,7 @@ def test_openai_create_still_receives_prompt_cache_key(
     sent = client.chat.completions.kwargs
     assert sent is not None
     assert "session_id" not in sent
-    assert sent.get("prompt_cache_key") == "hearth:oa-1"
+    assert sent.get("prompt_cache_key") == "ctxcache:oa-1"
 
 
 def test_contents_parts_become_one_message() -> None:
@@ -90,7 +90,7 @@ def test_contents_parts_become_one_message() -> None:
 def test_gemini_contents_mutation_is_not_counted_as_zero_tokens(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("HEARTH_HOME", str(tmp_path))
+    monkeypatch.setenv("CTXCACHE_HOME", str(tmp_path))
 
     class Models:
         def __init__(self) -> None:
@@ -112,7 +112,7 @@ def test_gemini_contents_mutation_is_not_counted_as_zero_tokens(
     ]
     recorder = TraceRecorder(trace_dir=tmp_path)
     client = Client()
-    wrapped = hearth.wrap(client, mode="safe", recorder=recorder)
+    wrapped = ctxcache.wrap(client, mode="safe", recorder=recorder)
     wrapped.models.generate_content(
         model="gemini-2.5-flash", contents=contents, session_id="gem-contents"
     )

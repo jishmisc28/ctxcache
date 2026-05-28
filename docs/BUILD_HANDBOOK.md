@@ -1,5 +1,5 @@
 ---
-kicker: Hearth · build handbook · v1.0
+kicker: CtxCache · build handbook · v1.0
 title: Hearth
 subtitle: An embeddable context engine that keeps an AI agent's prompt cache warm: what it is, how it works, how to build it and how to prove it
 date: 16 October 2026 · supersedes the Pawl handoff pack
@@ -10,17 +10,17 @@ note: This handbook is both the explanation for Abhranshu and the specification 
 
 ## 1. One page: what we are building
 
-**Hearth is a Python library that sits between an agent's code and the model API.** It decides, on every call, what goes into the context and in what order. That keeps the provider's prompt cache valid from step to step, so the agent pays roughly a tenth of the price for everything it has already sent, and gets its first token sooner.
+**CtxCache is a Python library that sits between an agent's code and the model API.** It decides, on every call, what goes into the context and in what order. That keeps the provider's prompt cache valid from step to step, so the agent pays roughly a tenth of the price for everything it has already sent, and gets its first token sooner.
 
 | | |
 |---|---|
 | **Who uses it** | Engineers running agents on Anthropic, OpenAI or Gemini models: LangGraph, the OpenAI Agents SDK, Pydantic AI, or a custom loop |
-| **How they adopt it** | `pip install hearth-ai` and one line: `client = hearth.wrap(anthropic.Anthropic())`. Their agent code does not change, and the default mode changes no content |
+| **How they adopt it** | `pip install ctxcache` and one line: `client = ctxcache.wrap(anthropic.Anthropic())`. Their agent code does not change, and the default mode changes no content |
 | **What they get** | A per-session report of cache hits, cost and latency. Automatic fixes for the layout mistakes that break the cache. A replay tool that tests a change before it ships. Later: memory and model switching that respect the cache |
-| **What proves it** | The same agents on the same tasks, with and without Hearth: cost per task, cache-read share, time to first token, and task success unchanged |
+| **What proves it** | The same agents on the same tasks, with and without CtxCache: cost per task, cache-read share, time to first token, and task success unchanged |
 | **What it is not** | Not an agent framework, not a gateway or proxy, not a hosted service, not a vector database, not a UI |
 
-**The one idea everything rests on:** memory, compaction, tool-output handling and model switching all look like separate products. Each of them is really a decision about the context, and each has a cache cost. Hearth is the one place that makes those decisions together, with the cost written down.
+**The one idea everything rests on:** memory, compaction, tool-output handling and model switching all look like separate products. Each of them is really a decision about the context, and each has a cache cost. CtxCache is the one place that makes those decisions together, with the cost written down.
 
 **Why it is credible to build now.** These are **Established** facts from public sources:
 - Providers charge about 0.1× for cached input. Some 2026 models charge 0.05× or less.
@@ -46,7 +46,7 @@ Providers keep the model's internal state for a **prefix** they have recently se
 | Lifetime | 5 min, refreshed on each hit, or 1 h | 30 min (GPT-5.6 and later) | 1 h default (explicit) |
 | Where usage is reported | `cache_read_input_tokens`, `cache_creation_input_tokens` | `input_tokens_details.cached_tokens`, `cache_write_tokens` | `usageMetadata.cachedContentTokenCount` |
 
-These are **To verify** values, checked on 16 Oct 2026 from the providers' own documentation. They live in a dated data file in the repo (`src/hearth/data/providers.toml`), never in code, and a nightly contract test (§9) catches drift.
+These are **To verify** values, checked on 16 Oct 2026 from the providers' own documentation. They live in a dated data file in the repo (`src/ctxcache/data/providers.toml`), never in code, and a nightly contract test (§9) catches drift.
 
 ### 2.3 One changed byte early in the prompt costs everything after it
 
@@ -78,7 +78,7 @@ That is a **73% saving**. One timestamp at the top of the system prompt turns al
 
 ### 2.4 The five stability classes
 
-Hearth sorts every piece of context into one of five classes, and the class decides where it may go:
+CtxCache sorts every piece of context into one of five classes, and the class decides where it may go:
 
 | Class | Examples | Rule |
 |---|---|---|
@@ -88,7 +88,7 @@ Hearth sorts every piece of context into one of five classes, and the class deci
 | **VOLATILE** | Current time, retrieved snippets for this turn, reminders, git status | Always placed in the tail, after the last cached position |
 | **TURN** | The new user input or tool result for this step | Last |
 
-This classification is how Claude Code's own team describes its fixes: reminders inside messages, not edits to the system prompt; no timestamps at the top; deterministic tool order. Hearth turns that practice into a library anyone can use.
+This classification is how Claude Code's own team describes its fixes: reminders inside messages, not edits to the system prompt; no timestamps at the top; deterministic tool order. CtxCache turns that practice into a library anyone can use.
 
 ## 3. The evidence that the problem is real
 
@@ -109,7 +109,7 @@ These are public reports from 2025–26. The numbers are as reported by the auth
 
 **What already exists, and why it is not enough:**
 
-| Existing thing | What it does | Gap Hearth fills |
+| Existing thing | What it does | Gap CtxCache fills |
 |---|---|---|
 | Provider automatic caching (Anthropic automatic mode, OpenAI, Gemini implicit) | Places breakpoints | Cannot stop the application changing the prefix |
 | OpenAI cache diagnostics (`comparison_response_id`) and Claude Code `/usage` | Name the first cause of a miss | One provider each; diagnosis only |
@@ -118,11 +118,11 @@ These are public reports from 2025–26. The numbers are as reported by the auth
 | Langfuse, LangSmith, Helicone | Record cached-token counts and price them | No hit-rate view, no cause, no fix |
 | Deep Agents, Claude Code internals | Get it right inside one harness | Not reusable elsewhere |
 
-**The gap Hearth owns:** an in-process, provider-neutral library that *enforces* a cache-stable layout automatically, makes context decisions (offloading, compaction, memory placement, model switching) with an explicit cache cost model, and proves the effect with replay and a public benchmark.
+**The gap CtxCache owns:** an in-process, provider-neutral library that *enforces* a cache-stable layout automatically, makes context decisions (offloading, compaction, memory placement, model switching) with an explicit cache cost model, and proves the effect with replay and a public benchmark.
 
 ## 4. Architecture
 
-![Hearth runs inside the agent's own process: the agent's code is unchanged, and every model call passes through the layout engine, the guard and the planner before reaching the provider.](hdiagrams/h1_arch.svg)
+![CtxCache runs inside the agent's own process: the agent's code is unchanged, and every model call passes through the layout engine, the guard and the planner before reaching the provider.](hdiagrams/h1_arch.svg)
 
 ### 4.1 Components
 
@@ -151,7 +151,7 @@ These are public reports from 2025–26. The numbers are as reported by the auth
 | `safe` | **No message or tool content is added, removed or changed.** It may add caching metadata (breakpoints, `prompt_cache_key`) when the planner expects reuse. It may restore the session's **first-seen order** of tools and schema keys if the application later reorders them | Measures, diagnoses, stabilises order drift, plans caching | **Yes** |
 | `optimize` | Documented moves: detected volatile values relocated to the tail; large tool outputs offloaded (if the app registered the read tool); compaction and memory policies | Everything above, plus policies | Opt-in |
 
-**Strict flag.** `wrap(..., strict=True)` (any mode) raises `HearthPrefixBreak` *before sending* when a user-caused break is detected. It is meant for tests and CI. Fail-open (INV-07) covers only Hearth's own internal errors, never an intentional strict raise.
+**Strict flag.** `wrap(..., strict=True)` (any mode) raises `CtxCachePrefixBreak` *before sending* when a user-caused break is detected. It is meant for tests and CI. Fail-open (INV-07) covers only Hearth's own internal errors, never an intentional strict raise.
 
 **Safe mode never sorts.** It keeps the application's own order for tools and schema keys, because order is part of what the model reads. It only *restores* an order the application already used earlier in the same session, and it records every restoration. The bench checks that restorations do not change task success.
 
@@ -173,7 +173,7 @@ These are public reports from 2025–26. The numbers are as reported by the auth
 
 The guard compares the new call with the previous call in the same session, and reports the first divergence with the level it invalidates (§2.3). Causes are checked **in this precedence order**, and the first match wins:
 
-| # | Cause code | Detected when | User-caused? | Fix Hearth offers |
+| # | Cause code | Detected when | User-caused? | Fix CtxCache offers |
 |---|---|---|---|---|
 | 1 | `below_minimum` | Prefix shorter than the model's cache minimum | No | None needed |
 | 2 | `short_session` | The session ended before any reuse was possible | No | None; the planner skips caching metadata when it predicts this |
@@ -182,7 +182,7 @@ The guard compares the new call with the previous call in the same session, and 
 | 5 | `params_changed` | Model, `tool_choice`, thinking, effort, format, `parallel_tool_calls` changed | Yes | Keep per session; switch via a sub-agent |
 | 6 | `tools_changed` | Tool set or definitions differ | Yes | Declare all tools at session start; `tool_addition` where supported |
 | 7 | `tools_reordered` | Same tools, different order | Yes | `safe` restores first-seen order |
-| 8 | `volatile_in_prefix` | The differing bytes match a volatile pattern (timestamp, date, UUID, counter, git hash, high-entropy token) | Yes | `hearth.volatile(...)`, or `optimize` relocates it |
+| 8 | `volatile_in_prefix` | The differing bytes match a volatile pattern (timestamp, date, UUID, counter, git hash, high-entropy token) | Yes | `ctxcache.volatile(...)`, or `optimize` relocates it |
 | 9 | `system_changed` | Any other system change | Yes | Mid-conversation system message, or move the changing part to the tail |
 | 10 | `session_mutated` | A SESSION segment changed mid-session (for example a memory write) | Yes | Queue for the tail; promote next session |
 | 11 | `image_toggled` | Image added or removed earlier in the prompt | Yes | Put images in the turn that needs them |
@@ -218,10 +218,10 @@ The guard emits a `prefix_break` event that records the call, segment, level, me
 
 ### 5.5 Offloading large tool outputs (`optimize`, M2)
 
-Hearth does not execute tools. Offloading works only when the application registers Hearth's read tool **with its own framework at session start**:
+CtxCache does not execute tools. Offloading works only when the application registers Hearth's read tool **with its own framework at session start**:
 
 ```python
-tools = [*my_tools, hearth.tools.read_offloaded]   # a normal tool the framework executes
+tools = [*my_tools, ctxcache.tools.read_offloaded]   # a normal tool the framework executes
 ```
 
 **Mechanism:**
@@ -250,7 +250,7 @@ pays back after  k* = one-time cost / saving per call
 - Saving per later call ≈ 4.5k.
 - **So compaction pays back after about 8 more calls.**
 
-Hearth compacts when the context window requires it, or when the expected remaining calls exceed k\*. It keeps a separate breakpoint at the end of the system prompt so only the summary is rewritten. Provider-native compaction is used where available, with its usage summed correctly.
+CtxCache compacts when the context window requires it, or when the expected remaining calls exceed k\*. It keeps a separate breakpoint at the end of the system prompt so only the summary is rewritten. Provider-native compaction is used where available, with its usage summed correctly.
 
 **Study:** the M2 gate includes a compaction study on long bench sessions, and its result decides how claim C-09 is worded.
 
@@ -284,7 +284,7 @@ A new value for the same scope, subject and predicate closes the old fact; it is
 
 ### 5.8 Switch or stay (M6)
 
-Hearth evaluates both paths with the cost model over the expected next n calls. Switching to model B on a session currently on model A means:
+CtxCache evaluates both paths with the cost model over the expected next n calls. Switching to model B on a session currently on model A means:
 - B's first call writes the whole prefix at B's prices;
 - later calls on B read at B's prices;
 - switching back to A finds A's cache only if the gap was shorter than A's TTL.
@@ -298,7 +298,7 @@ The verdict is one of three:
 - **switch**;
 - **delegate**: run the sub-task as a new session on B with only the context it needs. The cost is computed from that smaller context. This is the pattern Claude Code uses instead of switching mid-session.
 
-**Escalation is a quality rule, not a cost rule.** If a step fails an application-supplied check (schema, test or predicate), Hearth retries on the configured stronger model and reports the extra cost. Source for the value of pricing cache loss: vLLM's session-aware routing study (§14).
+**Escalation is a quality rule, not a cost rule.** If a step fails an application-supplied check (schema, test or predicate), CtxCache retries on the configured stronger model and reports the extra cost. Source for the value of pricing cache loss: vLLM's session-aware routing study (§14).
 
 ### 5.9 Simulator
 
@@ -322,7 +322,7 @@ The verdict is one of three:
 ```python
 import anthropic, hearth
 
-client = hearth.wrap(anthropic.Anthropic(), mode="safe")        # or AsyncAnthropic, OpenAI, AsyncOpenAI, genai.Client
+client = ctxcache.wrap(anthropic.Anthropic(), mode="safe")        # or AsyncAnthropic, OpenAI, AsyncOpenAI, genai.Client
 resp = client.messages.create(model=MODEL, system=SYSTEM, tools=TOOLS, messages=history)
 # session = one wrapped client by default; or set explicitly:
 with hearth.session("ticket-4821") as s:
@@ -332,17 +332,17 @@ with hearth.session("ticket-4821") as s:
 ```
 
 - **VOLATILE lifecycle:** a volatile note is attached to the user turn it was given for. After that it is ordinary APPEND history, kept unchanged, so the next call's prefix stays stable.
-- **Recording:** `record=True` writes full request bodies to the local trace (`~/.hearth/traces/`, never uploaded). `diagnose` needs it to print the offending text. Without it, `diagnose` reports the message index, level and cause only.
+- **Recording:** `record=True` writes full request bodies to the local trace (`~/.ctxcache/traces/`, never uploaded). `diagnose` needs it to print the offending text. Without it, `diagnose` reports the message index, level and cause only.
 
 **Integrations** (hook points to verify at M0/M3):
-- **OpenAI Agents SDK:** `set_default_openai_client(hearth.wrap(AsyncOpenAI()))`; the Responses API.
-- **Pydantic AI:** `AnthropicProvider(anthropic_client=hearth.wrap(AsyncAnthropic()))`.
-- **LangChain v1 / LangGraph:** `create_agent(..., middleware=[hearth.integrations.langchain.HearthMiddleware()])`. The middleware works on LangChain messages and writes cache metadata through the provider integration.
+- **OpenAI Agents SDK:** `set_default_openai_client(ctxcache.wrap(AsyncOpenAI()))`; the Responses API.
+- **Pydantic AI:** `AnthropicProvider(anthropic_client=ctxcache.wrap(AsyncAnthropic()))`.
+- **LangChain v1 / LangGraph:** `create_agent(..., middleware=[hearth.integrations.langchain.CtxCacheMiddleware()])`. The middleware works on LangChain messages and writes cache metadata through the provider integration.
 
 ### 6.2 CLI (illustrative output; real examples are generated from golden tests)
 
 ```text
-$ hearth report --session ticket-4821
+$ ctxcache report --session ticket-4821
 calls 31 · input 1.21M tok · read 0.94M (78%) · written 0.11M · uncached 0.16M
 input cost 0.32× of no-cache baseline · TTFT p50 1.4 s
 prefix breaks 2:
@@ -351,15 +351,15 @@ prefix breaks 2:
 ```
 
 ```text
-$ hearth diagnose ~/.hearth/traces/s-19.jsonl
+$ ctxcache diagnose ~/.ctxcache/traces/s-19.jsonl
 session s-19 · read share 4%
   every call: system level, message 0, byte 212: "Current time: 2026-10-16T17:42:03Z"
   cause volatile_in_prefix · est. 91% of input spend wasted
-  fix: hearth.volatile(...) or mode="optimize"
+  fix: ctxcache.volatile(...) or mode="optimize"
 ```
 
 ```text
-$ hearth replay ~/.hearth/traces/s-19.jsonl --modes observe,safe,optimize
+$ ctxcache replay ~/.ctxcache/traces/s-19.jsonl --modes observe,safe,optimize
 mode      read   written   uncached   input cost   user-caused breaks
 observe    4%      0%        96%         0.96×         29
 safe      61%      9%        30%         0.47×          6
@@ -413,7 +413,7 @@ Importers for LiteLLM and Langfuse exports are best-effort: without bodies they 
 | INV-04 | No already-sent message is changed except by a recorded compaction | `test_append_only` | M1 |
 | INV-05 | Every `optimize` move and every `safe` order restoration is recorded and reported | `test_changes_reported` | M2 (M1 for restorations) |
 | INV-06 | read + write + uncached equals the provider's total input exactly | `test_usage_reconciles_{anthropic,openai}` (M1), `_gemini` (M2) | M1/M2 |
-| INV-07 | Fail-open: an internal Hearth error sends the original request and records `hearth_error` (strict raises are not errors) | `test_fail_open` | M1 |
+| INV-07 | Fail-open: an internal CtxCache error sends the original request and records `ctxcache_error` (strict raises are not errors) | `test_fail_open` | M1 |
 | INV-08 | No network calls except to the wrapped provider and OTLP if enabled (`--online` is explicit) | `test_no_extra_network` | M1 |
 | INV-09 | No prompt content in the ledger, logs or spans; trace bodies only with `record=True` | `test_no_content_by_default` | M0 |
 | INV-10 | `below_minimum`, `short_session`, `ttl_expired` and `provider_miss` are never reported as user-caused | `test_break_attribution` | M1 |
@@ -477,8 +477,8 @@ Importers for LiteLLM and Langfuse exports are best-effort: without bodies they 
 |---|---|
 | A. Stock | The framework as documented in its quick-start |
 | B. Best practice | The framework's own documented caching configuration (for example cache control enabled) |
-| C. Hearth safe | Stock, plus `hearth.wrap` in `safe` mode |
-| D. Hearth layout prototype | The `optimize` behaviour, hand-built for M0 |
+| C. CtxCache safe | Stock, plus `ctxcache.wrap` in `safe` mode |
+| D. CtxCache layout prototype | The `optimize` behaviour, hand-built for M0 |
 
 **Runs:** 3 per task per arm, at temperature 0 where the API allows it.
 
@@ -495,31 +495,31 @@ Importers for LiteLLM and Langfuse exports are best-effort: without bodies they 
 | A already reaches ≥ 80% read share on the "typical" template for ≥ 2 frameworks | **Narrow:** build only the guard, diagnose and report (M1 + M4); skip the M2, M5 and M6 policies |
 | Otherwise | **Stop.** Publish the honest finding (GTM handbook §13) |
 
-**Where M0 code lives:** the recorder becomes the real `observe` mode under `src/hearth/`. Prototype layout code lives in `bench/m0/` and is deleted after M0.
+**Where M0 code lives:** the recorder becomes the real `observe` mode under `src/ctxcache/`. Prototype layout code lives in `bench/m0/` and is deleted after M0.
 
 ## 11. Repository and engineering rules
 
 ```text
 pyproject.toml, Makefile (check, test, contract, bench, report), .github/workflows/ci.yml
-src/hearth/__init__.py          wrap, session, volatile, modes, strict
-src/hearth/fingerprint.py       per-message fingerprints, rolling segment hashes
-src/hearth/segments.py          stability classes
-src/hearth/guard.py             divergence, levels, cause precedence
-src/hearth/planner.py           metadata decision, breakpoints, cache key, TTL (M6)
-src/hearth/cost.py              Decimal cost model
-src/hearth/adapters/            anthropic.py, openai_responses.py, openai_chat.py, gemini.py
-src/hearth/policies/            relocate.py, offload.py, compact.py, route.py
-src/hearth/memory/              store.py, checks.py, recall.py
-src/hearth/tools.py             read_offloaded (registered by the app)
-src/hearth/trace.py, ledger.py  JSONL traces, SQLite summary
-src/hearth/otel.py              optional extra
-src/hearth/sim/                 tokens.py, cache_sim.py
-src/hearth/testing.py           FakeProvider
-src/hearth/bench/               runner.py, report.py
-src/hearth/integrations/        langchain.py, openai_agents.py, pydantic_ai.py
-src/hearth/cli.py
-src/hearth/data/providers.toml  dated prices, multipliers, minimums, TTLs, per-level invalidation, with source URLs
-src/hearth/data/breaks.yaml     cause registry: code, level, detection, fix, test, public example
+src/ctxcache/__init__.py          wrap, session, volatile, modes, strict
+src/ctxcache/fingerprint.py       per-message fingerprints, rolling segment hashes
+src/ctxcache/segments.py          stability classes
+src/ctxcache/guard.py             divergence, levels, cause precedence
+src/ctxcache/planner.py           metadata decision, breakpoints, cache key, TTL (M6)
+src/ctxcache/cost.py              Decimal cost model
+src/ctxcache/adapters/            anthropic.py, openai_responses.py, openai_chat.py, gemini.py
+src/ctxcache/policies/            relocate.py, offload.py, compact.py, route.py
+src/ctxcache/memory/              store.py, checks.py, recall.py
+src/ctxcache/tools.py             read_offloaded (registered by the app)
+src/ctxcache/trace.py, ledger.py  JSONL traces, SQLite summary
+src/ctxcache/otel.py              optional extra
+src/ctxcache/sim/                 tokens.py, cache_sim.py
+src/ctxcache/testing.py           FakeProvider
+src/ctxcache/bench/               runner.py, report.py
+src/ctxcache/integrations/        langchain.py, openai_agents.py, pydantic_ai.py
+src/ctxcache/cli.py
+src/ctxcache/data/providers.toml  dated prices, multipliers, minimums, TTLs, per-level invalidation, with source URLs
+src/ctxcache/data/breaks.yaml     cause registry: code, level, detection, fix, test, public example
 bench/tasks/, bench/templates/, bench/m0/ (temporary)
 tests/                          unit, property, golden, contract (marked), integration; test_named_tests_exist.py
 docs/                           BUILD_HANDBOOK.md, STATUS.md, DECISIONS.md, METRICS.md (M1), BREAKS.md (M2, generated), BENCH.md, REPORT.md (M4)
@@ -528,8 +528,8 @@ gtm/                            GTM thread only
 
 - **Dependencies:** zero required dependencies in the core. Extras: `[anthropic]`, `[openai]`, `[gemini]`, `[otel]`, `[tiktoken]`, `[bench]`, `[langchain]`, `[pydantic-ai]`, `[openai-agents]`.
 - **Tooling:** `uv`, `ruff`, `mypy --strict` (core), `pytest`, `hypothesis`.
-- **Licence and name:** Apache-2.0; package `hearth-ai`, import `hearth`. **To verify** at M0 (fallback `hearth-cache`).
-- **Why Python:** Hearth runs inside the agent's process, and agents are written in Python first (then TypeScript). Its work per call is milliseconds against seconds of model time. Agent concurrency is network waiting, which `asyncio` handles.
+- **Licence and name:** Apache-2.0; package `ctxcache`, import `ctxcache`. **To verify** at M0 (fallback `hearth-cache`).
+- **Why Python:** CtxCache runs inside the agent's process, and agents are written in Python first (then TypeScript). Its work per call is milliseconds against seconds of model time. Agent concurrency is network waiting, which `asyncio` handles.
 
 ## 12. Release checklist (M7 gate)
 

@@ -6,14 +6,14 @@ from pathlib import Path
 from typing import Any
 
 from bench.tasks.registry import get_all_tasks
-from hearth.integrations.langgraph import HearthMiddleware
-from hearth.integrations.openai_agents import (
+from ctxcache.integrations.langgraph import CtxCacheMiddleware
+from ctxcache.integrations.openai_agents import (
     get_default_openai_client,
     set_default_openai_client,
     wrap_agents_client,
 )
-from hearth.integrations.pydantic_ai import HearthPydanticAIModel, wrap_pydantic_ai_client
-from hearth.trace import TraceRecorder
+from ctxcache.integrations.pydantic_ai import CtxCachePydanticAIModel, wrap_pydantic_ai_client
+from ctxcache.trace import TraceRecorder
 
 
 class MockModelClient:
@@ -36,9 +36,9 @@ class MockModelClient:
 
 
 def test_langgraph_middleware_mini_suite() -> None:
-    """Verifies that LangGraph HearthMiddleware transforms state and preserves prefix stability."""
+    """Verifies that LangGraph CtxCacheMiddleware transforms state and preserves prefix stability."""
     tasks = get_all_tasks()[:3]
-    middleware = HearthMiddleware(mode="optimize", session_id="langgraph-mini-test")
+    middleware = CtxCacheMiddleware(mode="optimize", session_id="langgraph-mini-test")
 
     for task in tasks:
         state = {
@@ -58,11 +58,11 @@ def test_langgraph_middleware_mini_suite() -> None:
         # Relocated content must appear in messages
         msgs = transformed_state["messages"]
         assert any("Runtime Context:" in m["content"] for m in msgs)
-        assert len(transformed_state.get("_hearth_changes", [])) > 0
+        assert len(transformed_state.get("_ctxcache_changes", [])) > 0
 
 
 def test_langgraph_observe_passthrough() -> None:
-    """Verifies that HearthMiddleware in observe mode passes messages through unmodified by reference (INV-01)."""
+    """Verifies that CtxCacheMiddleware in observe mode passes messages through unmodified by reference (INV-01)."""
 
     class CustomMessage:
         def __init__(self, content: str, msg_type: str = "human"):
@@ -79,14 +79,14 @@ def test_langgraph_observe_passthrough() -> None:
         "tools": [{"name": "tool_b"}, {"name": "tool_a"}],
     }
 
-    middleware = HearthMiddleware(mode="observe", session_id="observe-test")
+    middleware = CtxCacheMiddleware(mode="observe", session_id="observe-test")
     out_state = middleware(state)
 
     # State messages must be identical list/objects
     assert out_state["messages"] is orig_msgs
     assert out_state["messages"][0] is orig_msgs[0]
     assert out_state["system"] == "System prompt"
-    assert "_hearth_changes" not in out_state
+    assert "_ctxcache_changes" not in out_state
 
 
 def test_pydantic_ai_adapter_mini_suite(tmp_path: Path) -> None:
@@ -104,7 +104,7 @@ def test_pydantic_ai_adapter_mini_suite(tmp_path: Path) -> None:
                 self.client = c
 
         model = MockPydanticModel(wrapped_client)
-        adapter = HearthPydanticAIModel(model, mode="safe")
+        adapter = CtxCachePydanticAIModel(model, mode="safe")
 
         # Execute call
         resp = adapter.client.create(

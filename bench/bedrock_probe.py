@@ -15,9 +15,9 @@ import tempfile
 from decimal import Decimal
 from typing import Any
 
-import hearth
-from hearth.bedrock_converse import BedrockConverse, converse_endpoint
-from hearth.cost import compute_call_cost
+import ctxcache
+from ctxcache.bedrock_converse import BedrockConverse, converse_endpoint
+from ctxcache.cost import compute_call_cost
 
 CAP = Decimal("1")
 # Used only to refuse another call when a model has no sourced price.
@@ -92,10 +92,10 @@ def main() -> None:
     api_key = os.environ.get("BEDROCK_API_KEY", "")
     if not api_key:
         raise SystemExit("BEDROCK_API_KEY is not set")
-    os.environ["HEARTH_HOME"] = tempfile.mkdtemp(prefix="hearth-probe-")
+    os.environ["CTXCACHE_HOME"] = tempfile.mkdtemp(prefix="ctxcache-probe-")
     endpoint = converse_endpoint(os.environ.get("BEDROCK_ENDPOINT"))
     client = BedrockConverse(endpoint, api_key)
-    wrapped = hearth.wrap(client, mode="safe")
+    wrapped = ctxcache.wrap(client, mode="safe")
     short_system, short_messages = _prompt(140)
     long_system, long_messages = _prompt(650)
     limits = {"maxTokens": 8, "temperature": 0}

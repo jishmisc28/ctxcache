@@ -4,7 +4,7 @@
 
 ## What this is
 
-Hearth is a Python library that keeps an AI agent's prompt cache warm. It is **not** an agent framework, gateway, hosted service or UI.
+CtxCache is a Python library that keeps an AI agent's prompt cache warm. It is **not** an agent framework, gateway, hosted service or UI.
 
 **Source of truth, in order:**
 1. `docs/BUILD_HANDBOOK.md` (spec, invariants, plan);
@@ -18,7 +18,7 @@ The GTM thread follows `gtm/GTM_HANDBOOK.md`.
 - Build only the current milestone in BUILD_HANDBOOK §10. Anything in §7 "Not doing" needs Abhranshu's written OK, recorded in DECISIONS.
 - The core package has **zero required dependencies**. New dependencies go into an extra, and only with a DECISIONS entry (reason, size, licence).
 - No new top-level directories. No new docs except `docs/METRICS.md` (M1), `docs/BREAKS.md` (M2, generated from `breaks.yaml`), `docs/BENCH.md` (M0) and `docs/REPORT.md` (M4).
-- Provider facts (prices, minimums, TTLs, limits) live only in `src/hearth/data/providers.toml`, each with a source URL and date. Never hard-code them.
+- Provider facts (prices, minimums, TTLs, limits) live only in `src/ctxcache/data/providers.toml`, each with a source URL and date. Never hard-code them.
 
 ## How to work
 
@@ -38,7 +38,7 @@ The GTM thread follows `gtm/GTM_HANDBOOK.md`.
 - **`observe` is byte-identical.** Never "improve" a request in `observe` mode.
 - **`safe` is content-equivalent.** Same messages, same tools, same text; only serialisation may change.
 - **Append-only.** Never rewrite an already-sent message except through a recorded compaction event.
-- **Fail-open.** Any internal exception sends the original request unchanged and records `hearth_error`.
+- **Fail-open.** Any internal exception sends the original request unchanged and records `ctxcache_error`.
 - **Exact usage reconciliation.** Read + write + uncached must equal the provider's total input, per provider rules.
 - **No content in the ledger, logs or spans** unless recording is explicitly enabled.
 - **Cost arithmetic uses `Decimal`** or integer micro-units, never float.
@@ -52,7 +52,7 @@ The GTM thread follows `gtm/GTM_HANDBOOK.md`.
 
 ## Stop and ask Abhranshu (otherwise keep going)
 
-- **At M0 start:** approve the API budget (D-02); confirm the GitHub owner (`jishmisc28` or `ab-atnms`); confirm the PyPI name `hearth-ai` is free (fallback `hearth-cache`).
+- **At M0 start:** approve the API budget (D-02); confirm the GitHub owner (`jishmisc28` or `ab-atnms`); confirm the PyPI name `ctxcache` is free (fallback `hearth-cache`).
 - **At the M1 gate:** whether to make the repo public and tag `0.1.0a1` (D-09).
 - **The M0 go/stop decision.** Write the memo and wait.
 - **Public interfaces.** Anything that changes a documented interface: Python API, CLI flags, ledger schema, metric definitions.
@@ -63,7 +63,7 @@ The GTM thread follows `gtm/GTM_HANDBOOK.md`.
 
 - Post, email, DM or comment anywhere public; open issues or PRs in other projects; create accounts.
 - Put real API keys, prompts or customer data in fixtures or commits.
-- Read or edit anything outside this repo except `~/.hearth/`. `gtm/private/` is gitignored and never read by the build agent.
+- Read or edit anything outside this repo except `~/.ctxcache/`. `gtm/private/` is gitignored and never read by the build agent.
 - Write marketing claims in code docs. Product claims live in `gtm/` and go through `gtm/CLAIMS.md`.
 
 ## Parallel threads

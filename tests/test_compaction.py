@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from hearth.compaction import compute_compaction_payback
+from ctxcache.compaction import compute_compaction_payback
 
 
 def test_compaction_payback_formula_gemini() -> None:

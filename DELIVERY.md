@@ -1,7 +1,7 @@
 # Delivery State
 
 ## 1. Shipping Goal
-Ship Hearth v0.1: an embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements.
+Ship CtxCache v0.1: an embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements.
 
 ## 2. Big Rocks
 
@@ -21,7 +21,7 @@ Ship Hearth v0.1: an embeddable context engine that keeps an AI agent's prompt c
 - P2: Expose memory FTS5 indexing configuration for custom schemas.
 
 ## 4. Needs Founder
-- PyPI: enable trusted publishing for `jishmisc28/hearth`, environment name `pypi`.
+- PyPI: enable trusted publishing for `jishmisc28/ctxcache`, environment name `pypi`.
 - GitHub: add secret `GEMINI_API_KEY` so the nightly contract can start. This does not hold the tag.
 
 ## 5. Last Updated

@@ -15,10 +15,10 @@ import tempfile
 from decimal import Decimal
 from typing import Any
 
-import hearth
-from hearth.adapters.gemini import parse_gemini_usage
-from hearth.bedrock_converse import BedrockConverse, converse_endpoint
-from hearth.cost import compute_call_cost
+import ctxcache
+from ctxcache.adapters.gemini import parse_gemini_usage
+from ctxcache.bedrock_converse import BedrockConverse, converse_endpoint
+from ctxcache.cost import compute_call_cost
 
 CAP = Decimal("1")
 REPEATS = 1600
@@ -28,7 +28,7 @@ QUESTIONS = (
     "Do the instructions allow rewriting an earlier message?",
     "Where are provider prices stored?",
     "What is the default wrap mode?",
-    "What should happen when Hearth itself throws?",
+    "What should happen when CtxCache itself throws?",
     "Which cache misses are never the caller's fault?",
 )
 
@@ -361,7 +361,7 @@ def _run_nova_tools(spend: _Spend, wrapped: Any, model: str) -> None:
 
 
 def main() -> None:
-    os.environ["HEARTH_HOME"] = tempfile.mkdtemp(prefix="hearth-live-")
+    os.environ["CTXCACHE_HOME"] = tempfile.mkdtemp(prefix="ctxcache-live-")
     spend = _Spend()
     if os.environ.get("LIVE_CASE") == "tools":
         if not os.environ.get("BEDROCK_API_KEY"):
@@ -370,7 +370,7 @@ def main() -> None:
             converse_endpoint(os.environ.get("BEDROCK_ENDPOINT")),
             os.environ["BEDROCK_API_KEY"],
         )
-        wrapped_bedrock = hearth.wrap(bedrock, mode="safe")
+        wrapped_bedrock = ctxcache.wrap(bedrock, mode="safe")
         for model in ("amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0"):
             _run_nova_tools(spend, wrapped_bedrock, model)
         _emit({"case": "tool-session", "spent_usd": str(spend.spent), "cap_usd": "1"})
@@ -379,7 +379,7 @@ def main() -> None:
         from google import genai
 
         client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-        wrapped = hearth.wrap(client, mode="safe")
+        wrapped = ctxcache.wrap(client, mode="safe")
         _run_model(
             spend,
             name="gemini",
@@ -398,7 +398,7 @@ def main() -> None:
             converse_endpoint(os.environ.get("BEDROCK_ENDPOINT")),
             os.environ["BEDROCK_API_KEY"],
         )
-        wrapped_bedrock = hearth.wrap(bedrock, mode="safe")
+        wrapped_bedrock = ctxcache.wrap(bedrock, mode="safe")
         for model in ("amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0"):
             _run_model(
                 spend,

@@ -2,8 +2,8 @@
 
 import pytest
 
-from hearth import HearthPrefixBreak
-from hearth.guard import PrefixGuard
+from ctxcache import CtxCachePrefixBreak
+from ctxcache.guard import PrefixGuard
 
 
 def test_guard_strict_raises_on_user_break() -> None:
@@ -20,7 +20,7 @@ def test_guard_strict_raises_on_user_break() -> None:
     )
 
     # Second call changes model (params_changed: user-caused)
-    with pytest.raises(HearthPrefixBreak) as exc_info:
+    with pytest.raises(CtxCachePrefixBreak) as exc_info:
         guard.evaluate_call(
             curr_params={"model": "gemini-2.0-flash"},  # changed!
             curr_tools=[{"name": "tool_a"}],

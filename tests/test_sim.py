@@ -1,6 +1,6 @@
 """Tests for the prototype cache simulator and token estimation."""
 
-from hearth.sim import (
+from ctxcache.sim import (
     CacheSimulator,
     compute_calibration_mae,
     count_text_tokens,

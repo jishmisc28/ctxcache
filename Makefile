@@ -16,7 +16,7 @@ format:
 check:
 	$(RUFF) check src tests bench
 	$(RUFF) format --check src tests bench
-	$(MYPY) --strict src/hearth
+	$(MYPY) --strict src/ctxcache
 	$(PYTEST) -m "not contract" tests/
 
 test:
@@ -26,7 +26,7 @@ contract:
 	$(PYTEST) -m contract tests/
 
 bench:
-	$(PYTHON) -m hearth.bench.runner --m0 --verify
+	$(PYTHON) -m ctxcache.bench.runner --m0 --verify
 
 report:
-	$(PYTHON) -m hearth.bench.report
+	$(PYTHON) -m ctxcache.bench.report

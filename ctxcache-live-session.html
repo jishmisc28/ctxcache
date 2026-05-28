@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>CtxCache live sessions, 12 Nov 2026</title>
+<style>
+  body { margin: 0; background: #f4f1ea; color: #1c1917; font: 18px/1.5 Georgia, serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 40px; line-height: 1.15; margin-bottom: 8px; }
+  h2 { margin-bottom: 0; }
+  .model { color: #57534e; margin-top: 4px; }
+  .big { font-size: 42px; margin: 12px 0; }
+  .big span { font-size: 18px; }
+  section { background: white; border: 1px solid #e7e5e4; padding: 24px; margin: 20px 0; }
+  .note { color: #57534e; font-size: 15px; }
+  rect { rx: 2; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Measured sessions on the models that cached.</h1>
+  <p>12 Nov 2026. One session asks questions. One session calls tools. One session uses the models that answered under a $5 cap. Every dollar below is computed from the provider's token counts and the sourced price list.</p>
+  
+            <section>
+              <h2>Run 43261384508</h2>
+              <p>Seven questions against the same instructions, then one changed instruction. Output capped at 16 tokens.</p>
+              
+              <p class="note">Raw counts: <code>2026-11-12.json</code>. Dollars come from those counts and the sourced price list.</p>
+            </section>
+            
+            <section>
+              <h2>Gemini 2.5 Flash</h2>
+              <p class="model">gemini-2.5-flash</p>
+              <p class="big">25.5% <span>of the uncached bill</span></p>
+              <p>This session cost $0.00330885. The same tokens with no cache would have cost $0.01297080. Saved $0.00966195.</p>
+              <h3>Cached input tokens on each turn</h3>
+              <svg viewBox="0 0 640 160" width="100%" role="img"><rect x="8" y="132" width="90" height="4" fill="#1d4e49"/><text x="8" y="152" font-size="11" fill="#444">1</text><rect x="115" y="5" width="90" height="131" fill="#1d4e49"/><text x="115" y="152" font-size="11" fill="#444">2</text><rect x="221" y="5" width="90" height="131" fill="#1d4e49"/><text x="221" y="152" font-size="11" fill="#444">3</text><rect x="328" y="5" width="90" height="131" fill="#1d4e49"/><text x="328" y="152" font-size="11" fill="#444">4</text><rect x="435" y="5" width="90" height="131" fill="#1d4e49"/><text x="435" y="152" font-size="11" fill="#444">5</text><rect x="541" y="5" width="90" height="131" fill="#1d4e49"/><text x="541" y="152" font-size="11" fill="#444">6</text></svg>
+              <p class="note">Dark bars are stable turns. Where a short brown mark appears, that turn changed the instructions and the cache read dropped to zero. Height is cached input tokens, not dollars.</p>
+              <p>One thousand sessions at this measured rate would cost $3.30885000 instead of $12.97080000, a saving of $9.66195000. That line is the measured session multiplied by 1,000. It is not another run.</p>
+            </section>
+            
+            <section>
+              <h2>Nova Micro</h2>
+              <p class="model">amazon.nova-micro-v1:0</p>
+              <p class="big">19.2% <span>of the uncached bill</span></p>
+              <p>This session cost $0.00069191. The same tokens with no cache would have cost $0.00360430. Saved $0.00291239.</p>
+              <h3>Cached input tokens on each turn</h3>
+              <svg viewBox="0 0 640 160" width="100%" role="img"><rect x="8" y="132" width="64" height="4" fill="#1d4e49"/><text x="8" y="152" font-size="11" fill="#444">1</text><rect x="88" y="4" width="64" height="132" fill="#1d4e49"/><text x="88" y="152" font-size="11" fill="#444">2</text><rect x="168" y="4" width="64" height="132" fill="#1d4e49"/><text x="168" y="152" font-size="11" fill="#444">3</text><rect x="248" y="4" width="64" height="132" fill="#1d4e49"/><text x="248" y="152" font-size="11" fill="#444">4</text><rect x="328" y="4" width="64" height="132" fill="#1d4e49"/><text x="328" y="152" font-size="11" fill="#444">5</text><rect x="408" y="4" width="64" height="132" fill="#1d4e49"/><text x="408" y="152" font-size="11" fill="#444">6</text><rect x="488" y="4" width="64" height="132" fill="#1d4e49"/><text x="488" y="152" font-size="11" fill="#444">7</text><rect x="568" y="132" width="64" height="4" fill="#9a3412"/><text x="568" y="152" font-size="11" fill="#444">8</text></svg>
+              <p class="note">Dark bars are stable turns. Where a short brown mark appears, that turn changed the instructions and the cache read dropped to zero. Height is cached input tokens, not dollars.</p>
+              <p>One thousand sessions at this measured rate would cost $0.69191000 instead of $3.60430000, a saving of $2.91239000. That line is the measured session multiplied by 1,000. It is not another run.</p>
+            </section>
+            
+            <section>
+              <h2>Nova Lite</h2>
+              <p class="model">amazon.nova-lite-v1:0</p>
+              <p class="big">19.2% <span>of the uncached bill</span></p>
+              <p>This session cost $0.00118615. The same tokens with no cache would have cost $0.00617874. Saved $0.00499259.</p>
+              <h3>Cached input tokens on each turn</h3>
+              <svg viewBox="0 0 640 160" width="100%" role="img"><rect x="8" y="132" width="64" height="4" fill="#1d4e49"/><text x="8" y="152" font-size="11" fill="#444">1</text><rect x="88" y="4" width="64" height="132" fill="#1d4e49"/><text x="88" y="152" font-size="11" fill="#444">2</text><rect x="168" y="4" width="64" height="132" fill="#1d4e49"/><text x="168" y="152" font-size="11" fill="#444">3</text><rect x="248" y="4" width="64" height="132" fill="#1d4e49"/><text x="248" y="152" font-size="11" fill="#444">4</text><rect x="328" y="4" width="64" height="132" fill="#1d4e49"/><text x="328" y="152" font-size="11" fill="#444">5</text><rect x="408" y="4" width="64" height="132" fill="#1d4e49"/><text x="408" y="152" font-size="11" fill="#444">6</text><rect x="488" y="4" width="64" height="132" fill="#1d4e49"/><text x="488" y="152" font-size="11" fill="#444">7</text><rect x="568" y="132" width="64" height="4" fill="#9a3412"/><text x="568" y="152" font-size="11" fill="#444">8</text></svg>
+              <p class="note">Dark bars are stable turns. Where a short brown mark appears, that turn changed the instructions and the cache read dropped to zero. Height is cached input tokens, not dollars.</p>
+              <p>One thousand sessions at this measured rate would cost $1.18615000 instead of $6.17874000, a saving of $4.99259000. That line is the measured session multiplied by 1,000. It is not another run.</p>
+            </section>
+            
+            
+            <section>
+              <h2>Run 43264643293</h2>
+              <p>Five questions with the same instructions and the same three tools. Each finished tool call was followed by a short tool result, so the conversation grew. The sixth turn changed one tool description. The cache checkpoint stayed on the instructions. Replies were allowed 512 tokens so a tool call could finish. Every turn stopped on tool_use.</p>
+              <p>Turn 1 read 13,266 tokens that run 43264299216 had written about two minutes earlier. That attempt wrote the cache and then the next turn was rejected. This run did not write the prefix again.</p>
+              <p class="note">Raw counts: <code>2026-11-12-tools.json</code>. Dollars come from those counts and the sourced price list.</p>
+            </section>
+            
+            <section>
+              <h2>Nova Micro, tool session</h2>
+              <p class="model">amazon.nova-micro-v1:0</p>
+              <p class="big">28.3% <span>of the uncached bill</span></p>
+              <p>This session cost $0.00082708. The same tokens with no cache would have cost $0.00292160. Saved $0.00209452.</p>
+              <h3>Cached input tokens on each turn</h3>
+              <svg viewBox="0 0 640 160" width="100%" role="img"><rect x="8" y="10" width="90" height="126" fill="#1d4e49"/><text x="8" y="152" font-size="11" fill="#444">1</text><rect x="115" y="10" width="90" height="126" fill="#1d4e49"/><text x="115" y="152" font-size="11" fill="#444">2</text><rect x="221" y="10" width="90" height="126" fill="#1d4e49"/><text x="221" y="152" font-size="11" fill="#444">3</text><rect x="328" y="10" width="90" height="126" fill="#1d4e49"/><text x="328" y="152" font-size="11" fill="#444">4</text><rect x="435" y="9" width="90" height="127" fill="#1d4e49"/><text x="435" y="152" font-size="11" fill="#444">5</text><rect x="541" y="9" width="90" height="127" fill="#9a3412"/><text x="541" y="152" font-size="11" fill="#444">6</text></svg>
+              <p class="note">Dark bars are turns where the tools stayed the same. The brown bar is the turn that changed one tool description. The bar stays tall: that change did not clear the cache read. Height is cache-read tokens, not dollars.</p>
+              <p>One thousand sessions at this measured rate would cost $0.82708000 instead of $2.92160000, a saving of $2.09452000. That line is the measured session multiplied by 1,000. It is not another run.</p>
+            </section>
+            
+            <section>
+              <h2>Nova Lite, tool session</h2>
+              <p class="model">amazon.nova-lite-v1:0</p>
+              <p class="big">27.7% <span>of the uncached bill</span></p>
+              <p>This session cost $0.00137503. The same tokens with no cache would have cost $0.00496152. Saved $0.00358649.</p>
+              <h3>Cached input tokens on each turn</h3>
+              <svg viewBox="0 0 640 160" width="100%" role="img"><rect x="8" y="9" width="90" height="127" fill="#1d4e49"/><text x="8" y="152" font-size="11" fill="#444">1</text><rect x="115" y="9" width="90" height="127" fill="#1d4e49"/><text x="115" y="152" font-size="11" fill="#444">2</text><rect x="221" y="9" width="90" height="127" fill="#1d4e49"/><text x="221" y="152" font-size="11" fill="#444">3</text><rect x="328" y="9" width="90" height="127" fill="#1d4e49"/><text x="328" y="152" font-size="11" fill="#444">4</text><rect x="435" y="9" width="90" height="127" fill="#1d4e49"/><text x="435" y="152" font-size="11" fill="#444">5</text><rect x="541" y="9" width="90" height="127" fill="#9a3412"/><text x="541" y="152" font-size="11" fill="#444">6</text></svg>
+              <p class="note">Dark bars are turns where the tools stayed the same. The brown bar is the turn that changed one tool description. The bar stays tall: that change did not clear the cache read. Height is cache-read tokens, not dollars.</p>
+              <p>One thousand sessions at this measured rate would cost $1.37503000 instead of $4.96152000, a saving of $3.58649000. That line is the measured session multiplied by 1,000. It is not another run.</p>
+            </section>
+            
+            
+            <section>
+              <h2>Run 43269713464</h2>
+              <p>Six questions against the same instructions, then one changed instruction. Kimi K3 used an explicit cache breakpoint on the instructions. Nova Pro used a cache checkpoint. Replies were capped at 32 tokens on Kimi and 16 on Nova Pro. The Kimi cap included 24 reasoning tokens.</p>
+              
+              <p class="note">Raw counts: <code>2026-11-12-broad.json</code>. Dollars come from those counts and the sourced price list.</p>
+            </section>
+            
+            <section>
+              <h2>Kimi K3</h2>
+              <p class="model">us.moonshotai.kimi-k3</p>
+              <p class="big">43.0% <span>of the uncached bill</span></p>
+              <p>This session cost $0.95546138. The same tokens with no cache would have cost $2.22368850. Saved $1.26822712.</p>
+              <h3>Cached input tokens on each turn</h3>
+              <svg viewBox="0 0 640 160" width="100%" role="img"><rect x="8" y="132" width="75" height="4" fill="#1d4e49"/><text x="8" y="152" font-size="11" fill="#444">1</text><rect x="99" y="4" width="75" height="132" fill="#1d4e49"/><text x="99" y="152" font-size="11" fill="#444">2</text><rect x="191" y="4" width="75" height="132" fill="#1d4e49"/><text x="191" y="152" font-size="11" fill="#444">3</text><rect x="282" y="4" width="75" height="132" fill="#1d4e49"/><text x="282" y="152" font-size="11" fill="#444">4</text><rect x="374" y="4" width="75" height="132" fill="#1d4e49"/><text x="374" y="152" font-size="11" fill="#444">5</text><rect x="465" y="4" width="75" height="132" fill="#1d4e49"/><text x="465" y="152" font-size="11" fill="#444">6</text><rect x="557" y="132" width="75" height="4" fill="#9a3412"/><text x="557" y="152" font-size="11" fill="#444">7</text></svg>
+              <p class="note">Dark bars are stable turns. The short brown mark is the turn that changed the instructions. On that turn the cache read dropped to zero. Height is cache-read tokens, not dollars.</p>
+              <p>One thousand sessions at this measured rate would cost $955.46138000 instead of $2223.68850000, a saving of $1268.22712000. That line is the measured session multiplied by 1,000. It is not another run.</p>
+            </section>
+            
+            <section>
+              <h2>Nova Pro</h2>
+              <p class="model">amazon.nova-pro-v1:0</p>
+              <p class="big">18.3% <span>of the uncached bill</span></p>
+              <p>This session cost $0.01479400. The same tokens with no cache would have cost $0.08104080. Saved $0.06624680.</p>
+              <h3>Cached input tokens on each turn</h3>
+              <svg viewBox="0 0 640 160" width="100%" role="img"><rect x="8" y="132" width="75" height="4" fill="#1d4e49"/><text x="8" y="152" font-size="11" fill="#444">1</text><rect x="99" y="4" width="75" height="132" fill="#1d4e49"/><text x="99" y="152" font-size="11" fill="#444">2</text><rect x="191" y="4" width="75" height="132" fill="#1d4e49"/><text x="191" y="152" font-size="11" fill="#444">3</text><rect x="282" y="4" width="75" height="132" fill="#1d4e49"/><text x="282" y="152" font-size="11" fill="#444">4</text><rect x="374" y="4" width="75" height="132" fill="#1d4e49"/><text x="374" y="152" font-size="11" fill="#444">5</text><rect x="465" y="4" width="75" height="132" fill="#1d4e49"/><text x="465" y="152" font-size="11" fill="#444">6</text><rect x="557" y="132" width="75" height="4" fill="#9a3412"/><text x="557" y="152" font-size="11" fill="#444">7</text></svg>
+              <p class="note">Dark bars are stable turns. The short brown mark is the turn that changed the instructions. On that turn the cache read dropped to zero. Height is cache-read tokens, not dollars.</p>
+              <p>One thousand sessions at this measured rate would cost $14.79400000 instead of $81.04080000, a saving of $66.24680000. That line is the measured session multiplied by 1,000. It is not another run.</p>
+            </section>
+            
+            
+  <section>
+    <h2>What this page does not say</h2>
+    <p>gpt-oss is not here. Earlier calls returned no cache fields. Claude is not here. This Bedrock account still asks for the Anthropic use-case form. GPT-5.4, GPT-5.5, GPT-5.6 Luna, Grok 4.6, and Grok 4.7 returned HTTP 403 on this account. There is no direct OpenAI key. Gemini stopped on turn 7 of the question session because the key is on the free-tier quota. The older 42% figure in <code>docs/REPORT.md</code> is the offline simulator, not this bill.</p>
+  </section>
+</main>
+</body>
+</html>

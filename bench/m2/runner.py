@@ -13,10 +13,10 @@ from typing import Any
 
 from bench.m2.compaction_study import run_compaction_study
 from bench.tasks.registry import get_all_tasks
-from hearth.cost import compute_call_cost
-from hearth.layout import optimize_layout
-from hearth.sim.cache_sim import CacheSimulator
-from hearth.tools import READ_OFFLOADED_TOOL_DEF
+from ctxcache.cost import compute_call_cost
+from ctxcache.layout import optimize_layout
+from ctxcache.sim.cache_sim import CacheSimulator
+from ctxcache.tools import READ_OFFLOADED_TOOL_DEF
 
 
 def run_m2_benchmark() -> dict[str, Any]:

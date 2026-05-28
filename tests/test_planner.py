@@ -1,7 +1,7 @@
 """Unit tests for cache planner and TTL optimizer (BUILD_HANDBOOK §5.3, §5.4, INV-11)."""
 
-from hearth.planner import CachePlan, TTLOptimizer, plan_breakpoints
-from hearth.segments import Segment, StabilityClass
+from ctxcache.planner import CachePlan, TTLOptimizer, plan_breakpoints
+from ctxcache.segments import Segment, StabilityClass
 
 
 def test_ttl_optimizer_oneshot() -> None:

@@ -1,6 +1,6 @@
 # Prompt Cache Break Taxonomy & Cause Registry
 
-Generated from `src/hearth/data/breaks.yaml` per `BUILD_HANDBOOK.md` §5.2 and Milestone 2.
+Generated from `src/ctxcache/data/breaks.yaml` per `BUILD_HANDBOOK.md` §5.2 and Milestone 2.
 
 Hearth's `PrefixGuard` inspects successive API calls in a session, compares prompt prefix tokens against prior turns, and evaluates divergence causes **in strict precedence order** (first match wins).
 
@@ -8,7 +8,7 @@ Hearth's `PrefixGuard` inspects successive API calls in a session, compares prom
 
 ## 1. Summary Taxonomy & Precedence Table
 
-| Precedence | Cause Code | Level | User-Caused? | Detected When | Hearth Mitigation |
+| Precedence | Cause Code | Level | User-Caused? | Detected When | CtxCache Mitigation |
 |---|---|---|---|---|---|
 | **1** | `below_minimum` | system | No | Prefix shorter than provider minimum | Automatically skipped |
 | **2** | `short_session` | system | No | Session ends before reuse | Planner skips write fee |
@@ -44,7 +44,7 @@ When evaluating developer metrics:
 ### 1. `below_minimum`
 - **Condition**: Total prefix tokens $< \text{provider\_threshold}$ (e.g. 2,048 tokens on Gemini, 1,024 tokens on Anthropic, 1,024 on OpenAI).
 - **Impact**: Zero caching savings; request dispatched as full uncached input.
-- **Remediation**: None needed; Hearth avoids setting cache control headers to prevent unneeded write processing.
+- **Remediation**: None needed; CtxCache avoids setting cache control headers to prevent unneeded write processing.
 
 ### 2. `short_session`
 - **Condition**: Single-turn call where no subsequent turn occurs before session termination.
@@ -74,12 +74,12 @@ When evaluating developer metrics:
 ### 7. `tools_reordered`
 - **Condition**: Identical tool suite provided, but serialized in a different order due to non-deterministic dictionary traversal.
 - **Impact**: Byte-exact cache mismatch at prefix byte 0.
-- **Remediation**: `hearth.wrap(..., mode="safe")` remembers the first-seen tool order and automatically re-indexes outgoing tool arrays.
+- **Remediation**: `ctxcache.wrap(..., mode="safe")` remembers the first-seen tool order and automatically re-indexes outgoing tool arrays.
 
 ### 8. `volatile_in_prefix`
 - **Condition**: Timestamps, ISO dates, session counters, or git hashes embedded in the system prompt or static prefix.
 - **Impact**: Invalidates all tokens following byte offset 0.
-- **Remediation**: Use `hearth.volatile(text)` or run in `mode="optimize"`, which relocates volatile lines to the dynamic user message tail.
+- **Remediation**: Use `ctxcache.volatile(text)` or run in `mode="optimize"`, which relocates volatile lines to the dynamic user message tail.
 
 ### 9. `system_changed`
 - **Condition**: Instructional text in the system prompt altered mid-session.
@@ -99,7 +99,7 @@ When evaluating developer metrics:
 ### 12. `history_rewritten`
 - **Condition**: Earlier dialogue turns deleted or altered (e.g. naive sliding window truncating turn 0).
 - **Impact**: Shifting dialogue turns changes prefix byte 0, causing complete cache loss across the entire multi-turn context.
-- **Remediation**: Maintain append-only conversation history, or execute Hearth planned compaction at payback-positive boundaries.
+- **Remediation**: Maintain append-only conversation history, or execute CtxCache planned compaction at payback-positive boundaries.
 
 ### 13. `no_breakpoints`
 - **Condition**: Explicit caching provider (such as Anthropic Messages API) called without `cache_control` breakpoints.
@@ -109,7 +109,7 @@ When evaluating developer metrics:
 ### 14. `metadata_dropped`
 - **Condition**: Framework abstraction dropped vendor-specific caching headers or properties during message mapping.
 - **Impact**: Request reaches provider without necessary caching instructions.
-- **Remediation**: Hearth logs diagnostic telemetry noting the framework version and missing fields.
+- **Remediation**: CtxCache logs diagnostic telemetry noting the framework version and missing fields.
 
 ### 15. `cold_subagent`
 - **Condition**: Ephemeral subagent initiated with unique instructions that cannot reuse parent cache blocks.

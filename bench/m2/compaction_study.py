@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from hearth.compaction import compute_compaction_payback
+from ctxcache.compaction import compute_compaction_payback
 
 
 def run_compaction_study() -> dict[str, Any]:

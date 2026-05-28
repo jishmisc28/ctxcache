@@ -1,4 +1,4 @@
-"""Tests for Hearth memory write checks, recall, and safety validation (BUILD_HANDBOOK §5.7)."""
+"""Tests for CtxCache memory write checks, recall, and safety validation (BUILD_HANDBOOK §5.7)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from hearth.memory import (
+from ctxcache.memory import (
     MemoryStore,
     MemoryWriteError,
     pin,

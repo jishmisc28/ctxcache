@@ -8,8 +8,8 @@ from typing import Any
 
 from bench.m0.arms import SessionRunResult, _execute_agent_simulation
 from bench.tasks.registry import get_all_tasks
-from hearth.cost import compute_call_cost
-from hearth.sim.cache_sim import compute_calibration_mae
+from ctxcache.cost import compute_call_cost
+from ctxcache.sim.cache_sim import compute_calibration_mae
 
 
 def run_m0_kill_test() -> dict[str, Any]:

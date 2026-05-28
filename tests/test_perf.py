@@ -2,7 +2,7 @@
 
 import time
 
-from hearth.wrapper import WrappedMethod
+from ctxcache.wrapper import WrappedMethod
 
 
 def test_nfr1_safe_mode_latency_budget() -> None:

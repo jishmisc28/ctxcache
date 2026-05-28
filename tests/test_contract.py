@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
-import hearth
-from hearth.guard import PrefixGuard
-from hearth.trace import TraceRecorder
+import ctxcache
+from ctxcache.guard import PrefixGuard
+from ctxcache.trace import TraceRecorder
 
 
 @pytest.mark.contract
@@ -31,7 +31,7 @@ def test_contract_gemini_caching_and_break(tmp_path: Path) -> None:
 
     client = genai.Client(api_key=api_key)
     recorder = TraceRecorder(trace_dir=tmp_path)
-    wrapped = hearth.wrap(client, mode="safe", recorder=recorder)
+    wrapped = ctxcache.wrap(client, mode="safe", recorder=recorder)
     session_id = "contract-gemini-live"
 
     # About 4,000 tokens: over Gemini's 2,048 minimum, and far under the old 30,000.
@@ -97,7 +97,7 @@ def test_contract_openai_caching_and_break(tmp_path: Path) -> None:
 
     client = openai.OpenAI(api_key=api_key)
     recorder = TraceRecorder(trace_dir=tmp_path)
-    wrapped = hearth.wrap(client, mode="safe", recorder=recorder)
+    wrapped = ctxcache.wrap(client, mode="safe", recorder=recorder)
     session_id = "contract-openai-live"
 
     large_context = "This is a contract test knowledge base.\n" * 1500
@@ -158,13 +158,13 @@ def test_contract_bedrock_nova_caching_and_break(tmp_path: Path) -> None:
     if not api_key:
         pytest.skip("BEDROCK_API_KEY not configured for live contract test")
 
-    from hearth.bedrock_converse import BedrockConverse, converse_endpoint
+    from ctxcache.bedrock_converse import BedrockConverse, converse_endpoint
 
     # The saved chat-completions URL is a different operation. Nova uses Converse.
     endpoint = converse_endpoint(os.environ.get("BEDROCK_ENDPOINT"))
     client = BedrockConverse(endpoint, api_key)
     recorder = TraceRecorder(trace_dir=tmp_path)
-    wrapped = hearth.wrap(client, mode="safe", recorder=recorder)
+    wrapped = ctxcache.wrap(client, mode="safe", recorder=recorder)
     session_id = "contract-bedrock-nova"
     # The guard's default minimum is 2,048. At 180 repeats it counted 1,485
     # and named the break below_minimum before it looked at the changed text.

@@ -10,10 +10,10 @@ from typing import Any
 
 import pytest
 
-import hearth
-from hearth.adapters.bedrock import parse_bedrock_converse_usage
-from hearth.bedrock_converse import BedrockConverse
-from hearth.trace import TraceRecorder
+import ctxcache
+from ctxcache.adapters.bedrock import parse_bedrock_converse_usage
+from ctxcache.bedrock_converse import BedrockConverse
+from ctxcache.trace import TraceRecorder
 
 # Captured 2026-11-02 from amazon.nova-micro-v1:0, two identical calls.
 _WRITE = {
@@ -37,7 +37,7 @@ _READ = {
 
 
 def test_bad_chat_completions_url_is_not_used_for_converse() -> None:
-    from hearth.bedrock_converse import converse_endpoint
+    from ctxcache.bedrock_converse import converse_endpoint
 
     assert (
         converse_endpoint("https://bedrock-runtime.us-east-1.amazonaws.com/v1/chat/completions")
@@ -101,7 +101,7 @@ def test_converse_request_leaves_hearth_fields_out(monkeypatch: pytest.MonkeyPat
 
 
 def test_optimize_keeps_the_cache_checkpoint_and_the_old_clock() -> None:
-    from hearth.layout import LayoutMemory, optimize_converse_system
+    from ctxcache.layout import LayoutMemory, optimize_converse_system
 
     memory = LayoutMemory()
     system = [
@@ -140,14 +140,14 @@ def test_optimize_keeps_the_cache_checkpoint_and_the_old_clock() -> None:
 def test_wrap_records_a_converse_cache_read(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("HEARTH_HOME", str(tmp_path))
+    monkeypatch.setenv("CTXCACHE_HOME", str(tmp_path))
 
     class BedrockConverse:
         def create(self, **_kwargs: Any) -> SimpleNamespace:
             return SimpleNamespace(usage=dict(_READ))
 
     recorder = TraceRecorder(trace_dir=tmp_path)
-    wrapped = hearth.wrap(BedrockConverse(), mode="observe", recorder=recorder)
+    wrapped = ctxcache.wrap(BedrockConverse(), mode="observe", recorder=recorder)
     wrapped.create(
         model="amazon.nova-micro-v1:0",
         system=[{"text": "stable"}],

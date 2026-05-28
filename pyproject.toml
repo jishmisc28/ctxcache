@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "hearth-ai"
-version = "0.2.0"
+name = "ctxcache"
+version = "0.3.0"
 description = "Embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -47,10 +47,10 @@ dev = [
 ]
 
 [project.scripts]
-hearth = "hearth.cli:main"
+ctxcache = "ctxcache.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hearth"]
+packages = ["src/ctxcache"]
 
 [tool.ruff]
 line-length = 100

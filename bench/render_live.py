@@ -1,4 +1,4 @@
-"""Write hearth-live-session.html from the measured JSON files. No new numbers."""
+"""Write ctxcache-live-session.html from the measured JSON files. No new numbers."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ SOURCES = (
     ROOT / "bench" / "live" / "2026-11-12-tools.json",
     ROOT / "bench" / "live" / "2026-11-12-broad.json",
 )
-TARGET = ROOT / "hearth-live-session.html"
+TARGET = ROOT / "ctxcache-live-session.html"
 
 
 def _bars(turns: list[dict], width: int = 640, height: int = 160) -> str:
@@ -91,7 +91,7 @@ def main() -> None:
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Hearth live sessions, 12 Nov 2026</title>
+<title>CtxCache live sessions, 12 Nov 2026</title>
 <style>
   body {{ margin: 0; background: #f4f1ea; color: #1c1917; font: 18px/1.5 Georgia, serif; }}
   main {{ max-width: 820px; margin: 0 auto; padding: 48px 24px 80px; }}

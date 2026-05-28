@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-import hearth
-from hearth.trace import TraceRecorder
+import ctxcache
+from ctxcache.trace import TraceRecorder
 
 _USAGE = {
     "prompt_tokens": 10,
@@ -22,7 +22,7 @@ _USAGE = {
 def test_stream_is_counted_after_the_last_chunk(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("HEARTH_HOME", str(tmp_path))
+    monkeypatch.setenv("CTXCACHE_HOME", str(tmp_path))
 
     class ChatStream:
         def create(self, **kwargs: Any) -> Any:
@@ -35,7 +35,7 @@ def test_stream_is_counted_after_the_last_chunk(
             return chunks()
 
     recorder = TraceRecorder(trace_dir=tmp_path)
-    wrapped = hearth.wrap(ChatStream(), mode="observe", recorder=recorder)
+    wrapped = ctxcache.wrap(ChatStream(), mode="observe", recorder=recorder)
     stream = wrapped.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": "Hello"}],
@@ -52,14 +52,14 @@ def test_stream_is_counted_after_the_last_chunk(
 
 
 def test_async_call_is_counted_after_await(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("HEARTH_HOME", str(tmp_path))
+    monkeypatch.setenv("CTXCACHE_HOME", str(tmp_path))
 
     class ChatAsync:
         async def create(self, **_kwargs: Any) -> SimpleNamespace:
             return SimpleNamespace(usage=dict(_USAGE))
 
     recorder = TraceRecorder(trace_dir=tmp_path)
-    wrapped = hearth.wrap(ChatAsync(), mode="observe", recorder=recorder)
+    wrapped = ctxcache.wrap(ChatAsync(), mode="observe", recorder=recorder)
 
     async def run() -> SimpleNamespace:
         return await wrapped.create(

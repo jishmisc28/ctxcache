@@ -6,9 +6,9 @@ from decimal import Decimal
 from typing import Any
 
 from bench.tasks.mixed import get_all_mixed_tasks
-from hearth.cost import get_model_pricing
-from hearth.planner import TTLOptimizer
-from hearth.policies.route import evaluate_route
+from ctxcache.cost import get_model_pricing
+from ctxcache.planner import TTLOptimizer
+from ctxcache.policies.route import evaluate_route
 
 
 def run_m6_benchmark() -> dict[str, Any]:
@@ -17,7 +17,7 @@ def run_m6_benchmark() -> dict[str, Any]:
     passed_count = 0
     results: dict[str, Any] = {}
     total_stock_cost = Decimal("0")
-    total_hearth_cost = Decimal("0")
+    total_ctxcache_cost = Decimal("0")
 
     for task in tasks:
         # 1. Determine provider for models
@@ -47,7 +47,7 @@ def run_m6_benchmark() -> dict[str, Any]:
         )
         task_stock_cost = stock_call_cost
 
-        # 3. Hearth Cost (Evaluates route & TTL optimization):
+        # 3. CtxCache Cost (Evaluates route & TTL optimization):
         route_decision = evaluate_route(
             current_provider=prov_primary,
             current_model=task.primary_model,
@@ -66,7 +66,7 @@ def run_m6_benchmark() -> dict[str, Any]:
         escalated = False
 
         if task.id == "mixed_ttl_pause":
-            # Hearth with TTL optimizer:
+            # CtxCache with TTL optimizer:
             # expect_pause() activates 1-hour TTL on stable prefix:
             # 1 long write at 2.0x, but no rewrite after the 10-minute pause!
             # Call 1 writes at 2.0x, calls 2..n read from cache at 0.10x.
@@ -75,7 +75,7 @@ def run_m6_benchmark() -> dict[str, Any]:
                 session_id=task.id, expected_calls=task.expected_calls, expected_pause=True
             )
             write_mult_1h = Decimal("2.00")
-            hearth_cost = (
+            ctxcache_cost = (
                 p_prim.input_price_per_token * (write_mult_1h * prefix_len)  # Call 1 long TTL write
                 + p_prim.input_price_per_token
                 * (p_prim.read_multiplier * prefix_len * (n - Decimal("1")))  # Warm reads
@@ -98,18 +98,18 @@ def run_m6_benchmark() -> dict[str, Any]:
                 p_prim.input_price_per_token * (p_prim.read_multiplier * prefix_len + t_new)
                 + p_prim.output_price_per_token * out_toks
             )
-            hearth_cost = sec_call + prim_calls
+            ctxcache_cost = sec_call + prim_calls
         elif verdict == "delegate" and route_decision.delegate_cost is not None:
-            hearth_cost = route_decision.delegate_cost
+            ctxcache_cost = route_decision.delegate_cost
         elif verdict == "switch":
-            hearth_cost = route_decision.switch_cost
+            ctxcache_cost = route_decision.switch_cost
         else:
-            hearth_cost = route_decision.stay_cost
+            ctxcache_cost = route_decision.stay_cost
 
-        task_hearth_cost = hearth_cost
+        task_ctxcache_cost = ctxcache_cost
 
         # Savings computation
-        diff = task_stock_cost - task_hearth_cost
+        diff = task_stock_cost - task_ctxcache_cost
         savings_pct = float(diff / task_stock_cost * 100) if task_stock_cost > 0 else 0.0
 
         # Run task-specific checker
@@ -125,19 +125,19 @@ def run_m6_benchmark() -> dict[str, Any]:
             passed_count += 1
 
         total_stock_cost += task_stock_cost
-        total_hearth_cost += task_hearth_cost
+        total_ctxcache_cost += task_ctxcache_cost
 
         results[task.id] = {
             "title": task.title,
             "verdict": verdict,
             "stock_cost_usd": str(round(task_stock_cost, 6)),
-            "hearth_cost_usd": str(round(task_hearth_cost, 6)),
+            "ctxcache_cost_usd": str(round(task_ctxcache_cost, 6)),
             "savings_pct": round(savings_pct, 1),
             "passed": passed,
         }
 
     overall_savings = (
-        float((total_stock_cost - total_hearth_cost) / total_stock_cost * 100)
+        float((total_stock_cost - total_ctxcache_cost) / total_stock_cost * 100)
         if total_stock_cost > 0
         else 0.0
     )
@@ -154,7 +154,7 @@ def run_m6_benchmark() -> dict[str, Any]:
         "pass_rate_pct": pass_rate,
         "overall_savings_pct": round(overall_savings, 1),
         "total_stock_cost_usd": str(round(total_stock_cost, 6)),
-        "total_hearth_cost_usd": str(round(total_hearth_cost, 6)),
+        "total_ctxcache_cost_usd": str(round(total_ctxcache_cost, 6)),
         "results": results,
     }
 

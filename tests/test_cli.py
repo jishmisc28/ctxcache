@@ -4,8 +4,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from hearth.cli import main
-from hearth.ledger import Ledger
+from ctxcache.cli import main
+from ctxcache.ledger import Ledger
 
 
 def test_cli_report(tmp_path: Path, capsys: None) -> None:
@@ -138,10 +138,10 @@ def test_cli_guard(tmp_path: Path) -> None:
     assert exit_code == 0
 
     # 2. Regression run fails when user-caused break is produced
-    # Command writes a trace with user_caused break to $HEARTH_TRACE_DIR
+    # Command writes a trace with user_caused break to $CTXCACHE_TRACE_DIR
     bad_cmd = (
         f"{sys.executable} -c 'import os, json, pathlib; "
-        'p = pathlib.Path(os.environ["HEARTH_TRACE_DIR"]) / "agent.jsonl"; '
+        'p = pathlib.Path(os.environ["CTXCACHE_TRACE_DIR"]) / "agent.jsonl"; '
         'p.write_text(json.dumps({"call": 1, "breaks": [{"cause": "volatile_in_prefix", "user_caused": True, "level": "system"}]}))\''
     )
     exit_code_bad = main(["guard", "--baseline", str(baseline_dir), "--run", bad_cmd])
@@ -149,6 +149,6 @@ def test_cli_guard(tmp_path: Path) -> None:
 
 
 def test_cli_bench() -> None:
-    """Verifies that hearth bench --report executes and generates report."""
+    """Verifies that ctxcache bench --report executes and generates report."""
     exit_code = main(["bench", "--report"])
     assert exit_code == 0

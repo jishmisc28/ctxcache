@@ -18,9 +18,9 @@ import urllib.request
 from decimal import Decimal
 from typing import Any
 
-import hearth
-from hearth.bedrock_converse import BedrockConverse, converse_endpoint
-from hearth.cost import compute_call_cost
+import ctxcache
+from ctxcache.bedrock_converse import BedrockConverse, converse_endpoint
+from ctxcache.cost import compute_call_cost
 
 CAP = Decimal("5")
 LINE = "This is a contract test knowledge base.\n"
@@ -31,7 +31,7 @@ QUESTIONS = (
     "Do the instructions allow rewriting an earlier message?",
     "Where are provider prices stored?",
     "What is the default wrap mode?",
-    "What should happen when Hearth itself throws?",
+    "What should happen when CtxCache itself throws?",
 )
 CLAUDE_PROBES = (
     "us.anthropic.claude-haiku-4-5-20251001-v1:0",
@@ -340,7 +340,7 @@ def _openai_probe(spend: _Spend) -> None:
 
 
 def main() -> None:
-    os.environ["HEARTH_HOME"] = tempfile.mkdtemp(prefix="hearth-broad-")
+    os.environ["CTXCACHE_HOME"] = tempfile.mkdtemp(prefix="ctxcache-broad-")
     if not os.environ.get("BEDROCK_API_KEY"):
         raise SystemExit("BEDROCK_API_KEY is not set")
     spend = _Spend()
@@ -349,7 +349,7 @@ def main() -> None:
         converse_endpoint(os.environ.get("BEDROCK_ENDPOINT")),
         os.environ["BEDROCK_API_KEY"],
     )
-    wrapped = hearth.wrap(converse, mode="safe")
+    wrapped = ctxcache.wrap(converse, mode="safe")
     _claude_probe(spend, wrapped)
     _openai_probe(spend)
     kimi = _first_chat(spend, KIMI_IDS, "Reply briefly.")

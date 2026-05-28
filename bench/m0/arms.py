@@ -9,7 +9,7 @@ from typing import Any
 from bench.tasks.base import BenchTask
 from bench.templates.minimal import render_minimal_template
 from bench.templates.typical import render_typical_template
-from hearth.sim.tokens import count_message_tokens, count_text_tokens, count_tool_tokens
+from ctxcache.sim.tokens import count_message_tokens, count_text_tokens, count_tool_tokens
 
 
 @dataclass
@@ -90,8 +90,8 @@ def _execute_agent_simulation(
             # Typical template contains dynamic timestamp
             # In Arm A (Stock), the timestamp changes every turn!
             # In Arm B (Best Practice), static timestamp or manually stabilized
-            # In Arm C (Hearth Safe), content is unchanged (timestamp still moves)
-            # In Arm D (Hearth Layout Prototype), timestamp is extracted and relocated to tail!
+            # In Arm C (CtxCache Safe), content is unchanged (timestamp still moves)
+            # In Arm D (CtxCache Layout Prototype), timestamp is extracted and relocated to tail!
             if arm in ("A", "C"):
                 # Timestamp recalculates on every turn
                 ts_str = f"2026-10-19T12:{14 + turn:02d}:00Z"

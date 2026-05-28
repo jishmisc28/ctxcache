@@ -15,9 +15,9 @@ if str(_REPO_ROOT) not in sys.path:
 if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
-import hearth  # noqa: E402
+import ctxcache  # noqa: E402
 from bench.tasks.memory import get_all_memory_tasks  # noqa: E402
-from hearth.memory import MemoryStore  # noqa: E402
+from ctxcache.memory import MemoryStore  # noqa: E402
 
 
 def run_m5_benchmark() -> dict[str, Any]:
@@ -36,7 +36,7 @@ def run_m5_benchmark() -> dict[str, Any]:
 
             for s_idx, query in enumerate(task.session_queries, start=1):
                 session_name = f"sess-{task.id}-{s_idx}"
-                with hearth.session(session_name) as s:
+                with ctxcache.session(session_name) as s:
                     # Session start: retrieve pinned facts
                     _ = store.get_pinned_session_text(
                         scope=scope, subjects=["log_level", "timezone", "schema", "stack"]

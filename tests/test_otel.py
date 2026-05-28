@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import patch
 
-import hearth
+import ctxcache
 
 
 class MockResponse:
@@ -32,9 +32,9 @@ class MockClient:
 def test_otel_span_emitted_on_wrapped_call() -> None:
     """Verifies that record_span is called with semantic cache attributes."""
     underlying = MockClient()
-    client = hearth.wrap(underlying, mode="safe")
+    client = ctxcache.wrap(underlying, mode="safe")
 
-    with patch("hearth.wrapper.record_span") as mock_record:
+    with patch("ctxcache.wrapper.record_span") as mock_record:
         client.create(
             model="gemini-2.5-flash",
             messages=[{"role": "user", "content": "Hello OTel"}],

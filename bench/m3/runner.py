@@ -21,14 +21,14 @@ if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
 from bench.tasks.registry import get_all_tasks  # noqa: E402
-from hearth.integrations.langgraph import HearthMiddleware  # noqa: E402
-from hearth.integrations.openai_agents import (  # noqa: E402
+from ctxcache.integrations.langgraph import CtxCacheMiddleware  # noqa: E402
+from ctxcache.integrations.openai_agents import (  # noqa: E402
     get_default_openai_client,
     set_default_openai_client,
     wrap_agents_client,
 )
-from hearth.integrations.pydantic_ai import (  # noqa: E402
-    HearthPydanticAIModel,
+from ctxcache.integrations.pydantic_ai import (  # noqa: E402
+    CtxCachePydanticAIModel,
     wrap_pydantic_ai_client,
 )
 
@@ -60,7 +60,7 @@ def run_m3_benchmark() -> dict[str, Any]:
 
     # 1. LangGraph Middleware
     langgraph_passed = 0
-    middleware = HearthMiddleware(mode="optimize", session_id="bench-langgraph-m3")
+    middleware = CtxCacheMiddleware(mode="optimize", session_id="bench-langgraph-m3")
     for task in tasks:
         state = {
             "system": f"LangGraph agent for {task.title}\nCurrent time: 2026-10-19T14:40:00Z",
@@ -72,7 +72,10 @@ def run_m3_benchmark() -> dict[str, Any]:
         }
         res = middleware(state)
         # Check that optimize layout succeeded
-        if "Current time:" not in res.get("system", "") and len(res.get("_hearth_changes", [])) > 0:
+        if (
+            "Current time:" not in res.get("system", "")
+            and len(res.get("_ctxcache_changes", [])) > 0
+        ):
             langgraph_passed += 1
 
     results["langgraph"] = {
@@ -92,7 +95,7 @@ def run_m3_benchmark() -> dict[str, Any]:
                 self.client = c
 
         model = MockPydanticModel(wrapped)
-        adapter = HearthPydanticAIModel(model, mode="safe")
+        adapter = CtxCachePydanticAIModel(model, mode="safe")
 
         resp = adapter.client.create(
             model="gemini-2.5-flash",
