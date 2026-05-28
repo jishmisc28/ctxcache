@@ -7,7 +7,11 @@
 
 ## Proof video
 
-A clear measured proof film for CtxCache is being remade. Until it ships, see the live session numbers in [`docs/REPORT.md`](docs/REPORT.md) and [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json) (Kimi K3: paid **$0.95546138**, uncached **$2.22368850**, saved **$1.26822712**).
+[Watch the measured proof film (122s)](https://github.com/jishmisc28/ctxcache/releases/download/proof-video/ctxcache-cost-proof.mp4) — problem → real Kimi test case → receipt.
+
+Source numbers: [`docs/REPORT.md`](docs/REPORT.md) · [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json) · file also at [`docs/media/ctxcache-cost-proof.mp4`](docs/media/ctxcache-cost-proof.mp4)
+
+Kimi K3 session: paid **$0.95546138**, uncached **$2.22368850**, saved **$1.26822712**.
 
 
 An embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements.
