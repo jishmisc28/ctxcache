@@ -1,4 +1,4 @@
-=== HEARTH v0.1 OFFLINE DEMO RECORDING (2026-10-23T02:14:34Z) ===
+=== CTXCACHE v0.1 OFFLINE DEMO RECORDING (2026-10-23T02:14:34Z) ===
 
 --- [Check 3] observe mode byte-identical passthrough ---
 IN_BYTES : {"messages": [{"content": "Hello world", "role": "user"}], "model": "claude-3-5-sonnet-20241022", "session_id": "demo-observe", "system": "You are a precise assistant.\nTimestamp: 2026-10-23T02:00:00Z", "tools": [{"description": "Z", "name": "z_tool"}, {"description": "A", "name": "a_tool"}]}

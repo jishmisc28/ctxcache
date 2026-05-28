@@ -16,8 +16,8 @@ Tracks live provider calls, token totals, and spend against approved budget (D-0
 | 2026-11-02 | bedrock-gptoss-stable-1 | Amazon Bedrock Chat Completions | openai.gpt-oss-120b-1:0 | 1699 | 0 (field absent) | 8 | 0.00025965 | 0.00029145 |
 | 2026-11-02 | bedrock-gptoss-stable-2 | Amazon Bedrock Chat Completions | openai.gpt-oss-120b-1:0 | 1699 | 0 (field absent) | 8 | 0.00025965 | 0.00055110 |
 | 2026-11-02 | bedrock-gptoss-clock | Amazon Bedrock Chat Completions | openai.gpt-oss-120b-1:0 | 1716 | 0 (field absent) | 8 | 0.00026220 | 0.00081330 |
-| 2026-11-02 | bedrock-hearth-observe | Amazon Bedrock via ctxcache.wrap observe | openai.gpt-oss-120b-1:0 | 102 | 0 (field absent) | 8 | 0.00002010 | 0.00083340 |
-| 2026-11-02 | bedrock-hearth-optimize | Amazon Bedrock via ctxcache.wrap optimize | openai.gpt-oss-120b-1:0 | 106 | 0 (field absent) | 8 | 0.00002070 | 0.00085410 |
+| 2026-11-02 | bedrock-ctxcache-observe | Amazon Bedrock via ctxcache.wrap observe | openai.gpt-oss-120b-1:0 | 102 | 0 (field absent) | 8 | 0.00002010 | 0.00083340 |
+| 2026-11-02 | bedrock-ctxcache-optimize | Amazon Bedrock via ctxcache.wrap optimize | openai.gpt-oss-120b-1:0 | 106 | 0 (field absent) | 8 | 0.00002070 | 0.00085410 |
 | 2026-11-02 | bedrock-nova-write | Amazon Bedrock Converse | amazon.nova-micro-v1:0 | 2407 | 0 read, 2401 written | 2 | 0.00000049 | 0.00085459 |
 | 2026-11-02 | bedrock-nova-read | Amazon Bedrock Converse | amazon.nova-micro-v1:0 | 2407 | 2401 | 2 | 0.00002150 | 0.00087609 |
 | 2026-11-02 | bedrock-nova-wrap-write | ctxcache.wrap observe, Converse | amazon.nova-micro-v1:0 | 3607 | 0 read, 3601 written | 2 | 0.00000049 | 0.00087658 |

@@ -17,11 +17,11 @@
 
 ## Proof video
 
-One real Kimi K3 run: the standing document, no-cache vs cached cost, the break when the document changes, and the receipt — **paid $0.95546138** against **$2.22368850** uncached (**saved $1.26822712**). Source: [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json). Silent cut for the README.
+One real Kimi K3 run: the standing document, no-cache vs cached cost, the break when the document changes, and the receipt — **paid $0.95546138** against **$2.22368850** uncached (**saved $1.26822712**). Source: [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json). Silent cut.
 
-https://github.com/jishmisc28/ctxcache/releases/download/proof-video/ctxcache-cost-proof.mp4
+![CtxCache measured proof](docs/media/ctxcache-cost-proof-preview.gif)
 
-[Download the same file](docs/media/ctxcache-cost-proof.mp4) · [Release](https://github.com/jishmisc28/ctxcache/releases/tag/proof-video) · [Live session write-up](docs/REPORT.md)
+[Full silent MP4 (122s)](docs/media/ctxcache-cost-proof.mp4) · [Release download](https://github.com/jishmisc28/ctxcache/releases/download/proof-video/ctxcache-cost-proof.mp4) · [Live session write-up](docs/REPORT.md)
 
 An embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements.
 
@@ -142,34 +142,34 @@ set_default_openai_client(OpenAI())
 
 ## CLI & Tooling
 
-### `hearth report`
+### `ctxcache report`
 Inspect aggregated cache performance, read share, and exact input dollar savings for a session from the SQLite ledger:
 ```bash
-hearth report --session "session-prod-worker-1"
+ctxcache report --session "session-prod-worker-1"
 ```
 
-### `hearth diagnose`
+### `ctxcache diagnose`
 Analyze root causes of cache breaks in a JSONL trace file:
 ```bash
-hearth diagnose ./traces/session.jsonl
+ctxcache diagnose ./traces/session.jsonl
 ```
 
-### `hearth replay`
+### `ctxcache replay`
 Replay recorded JSONL traces through the deterministic cache simulator under `observe`, `safe`, and `optimize` policies:
 ```bash
-hearth replay ./traces/session.jsonl
+ctxcache replay ./traces/session.jsonl
 ```
 
-### `hearth guard`
+### `ctxcache guard`
 Protect against prompt cache regressions in CI test suites. Fails if a code commit introduces user-caused prefix breaks:
 ```bash
-hearth guard --baseline ./traces/baseline.jsonl --run "pytest tests/agent/"
+ctxcache guard --baseline ./traces/baseline.jsonl --run "pytest tests/agent/"
 ```
 
-### `hearth bench --report`
+### `ctxcache bench --report`
 Reproduce the frozen Cache Efficiency Report v1 across all 20 pre-registered tasks:
 ```bash
-hearth bench --report
+ctxcache bench --report
 ```
 
 ---

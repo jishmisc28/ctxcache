@@ -66,7 +66,7 @@ def test_converse_write_then_read_reconciles() -> None:
         assert usage.total_input + usage.output == raw["totalTokens"]
 
 
-def test_converse_request_leaves_hearth_fields_out(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_converse_request_leaves_ctxcache_fields_out(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, Any] = {}
 
     class _Response:

@@ -1,6 +1,6 @@
 ---
 kicker: CtxCache · build handbook · v1.0
-title: Hearth
+title: CtxCache
 subtitle: An embeddable context engine that keeps an AI agent's prompt cache warm: what it is, how it works, how to build it and how to prove it
 date: 16 October 2026 · supersedes the Pawl handoff pack
 note: This handbook is both the explanation for Abhranshu and the specification the build agent works from. Every claim about providers is sourced and dated, because provider caching rules change. The first two weeks are a kill test. Nothing after M0 is built unless the kill test passes.
@@ -74,7 +74,7 @@ These rules are **To verify** against the live docs at M1, and they are encoded 
 
 That is a **73% saving**. One timestamp at the top of the system prompt turns all of it back into full price.
 
-![The same agent, two layouts. A volatile value at the top breaks the cache; Hearth's layout keeps everything stable before the volatile tail.](hdiagrams/h2_layout.svg)
+![The same agent, two layouts. A volatile value at the top breaks the cache; CtxCache's layout keeps everything stable before the volatile tail.](hdiagrams/h2_layout.svg)
 
 ### 2.4 The five stability classes
 
@@ -139,7 +139,7 @@ These are public reports from 2025–26. The numbers are as reported by the auth
 | Simulator | Replays traces through each provider's cache rules | M0 prototype, M4 |
 | Bench | Pre-registered task suite, mock tools, runner, report | M0, M4 |
 | Integrations | LangChain/LangGraph middleware; OpenAI Agents SDK and Pydantic AI by client injection | M0 (Agents SDK, Pydantic AI), M3 (LangGraph) |
-| Testing helpers | `hearth.testing.FakeProvider`: canned responses with simulated usage, so `guard` runs in CI with no API key | M4 |
+| Testing helpers | `ctxcache.testing.FakeProvider`: canned responses with simulated usage, so `guard` runs in CI with no API key | M4 |
 | CLI | `report`, `diagnose`, `replay`, `bench`, `guard` | M1 onward |
 | OTel | Spans with `gen_ai.usage.cache_read.input_tokens` and the cache-write attribute (naming in flux, D-10) | M1 |
 
@@ -151,7 +151,7 @@ These are public reports from 2025–26. The numbers are as reported by the auth
 | `safe` | **No message or tool content is added, removed or changed.** It may add caching metadata (breakpoints, `prompt_cache_key`) when the planner expects reuse. It may restore the session's **first-seen order** of tools and schema keys if the application later reorders them | Measures, diagnoses, stabilises order drift, plans caching | **Yes** |
 | `optimize` | Documented moves: detected volatile values relocated to the tail; large tool outputs offloaded (if the app registered the read tool); compaction and memory policies | Everything above, plus policies | Opt-in |
 
-**Strict flag.** `wrap(..., strict=True)` (any mode) raises `CtxCachePrefixBreak` *before sending* when a user-caused break is detected. It is meant for tests and CI. Fail-open (INV-07) covers only Hearth's own internal errors, never an intentional strict raise.
+**Strict flag.** `wrap(..., strict=True)` (any mode) raises `CtxCachePrefixBreak` *before sending* when a user-caused break is detected. It is meant for tests and CI. Fail-open (INV-07) covers only CtxCache's own internal errors, never an intentional strict raise.
 
 **Safe mode never sorts.** It keeps the application's own order for tools and schema keys, because order is part of what the model reads. It only *restores* an order the application already used earlier in the same session, and it records every restoration. The bench checks that restorations do not change task success.
 
@@ -218,7 +218,7 @@ The guard emits a `prefix_break` event that records the call, segment, level, me
 
 ### 5.5 Offloading large tool outputs (`optimize`, M2)
 
-CtxCache does not execute tools. Offloading works only when the application registers Hearth's read tool **with its own framework at session start**:
+CtxCache does not execute tools. Offloading works only when the application registers CtxCache's read tool **with its own framework at session start**:
 
 ```python
 tools = [*my_tools, ctxcache.tools.read_offloaded]   # a normal tool the framework executes
@@ -229,7 +229,7 @@ tools = [*my_tools, ctxcache.tools.read_offloaded]   # a normal tool the framewo
 - In the outgoing request, the result is replaced by a stub carrying the handle, the size, a short preview, and an instruction to call `read_offloaded(handle, start, end)`.
 - Because the stub is a pure function of the content hash, **every later call substitutes the same stub for the same result.** The prefix stays stable even though the framework resends the full result each time.
 - The substitution decision for a message is made once and remembered (handle map keyed on content hash). Already-sent messages are therefore never changed.
-- **If the read tool is not registered, offloading is disabled** and `hearth report` says so.
+- **If the read tool is not registered, offloading is disabled** and `ctxcache report` says so.
 
 **Risk:** the model may need the full content. The M2 bench measures task success with and without offloading, and that data sets the default threshold.
 
@@ -278,7 +278,7 @@ A new value for the same scope, subject and predicate closes the old fact; it is
 **Recall:** SQLite FTS5 (no vectors in v0).
 
 **API:**
-- `hearth.memory.remember(scope, subject, predicate, value, source=…)`
+- `ctxcache.memory.remember(scope, subject, predicate, value, source=…)`
 - `recall(scope, query, k)`
 - `pin(scope, subjects)`
 
@@ -320,12 +320,12 @@ The verdict is one of three:
 ### 6.1 Python API
 
 ```python
-import anthropic, hearth
+import anthropic, ctxcache
 
 client = ctxcache.wrap(anthropic.Anthropic(), mode="safe")        # or AsyncAnthropic, OpenAI, AsyncOpenAI, genai.Client
 resp = client.messages.create(model=MODEL, system=SYSTEM, tools=TOOLS, messages=history)
 # session = one wrapped client by default; or set explicitly:
-with hearth.session("ticket-4821") as s:
+with ctxcache.session("ticket-4821") as s:
     s.volatile(f"Current time: {now()}")   # appended to the next user turn, then kept as ordinary history
     s.expect_pause()                       # hint for the TTL planner (M6)
     resp = client.messages.create(...)
@@ -337,7 +337,7 @@ with hearth.session("ticket-4821") as s:
 **Integrations** (hook points to verify at M0/M3):
 - **OpenAI Agents SDK:** `set_default_openai_client(ctxcache.wrap(AsyncOpenAI()))`; the Responses API.
 - **Pydantic AI:** `AnthropicProvider(anthropic_client=ctxcache.wrap(AsyncAnthropic()))`.
-- **LangChain v1 / LangGraph:** `create_agent(..., middleware=[hearth.integrations.langchain.CtxCacheMiddleware()])`. The middleware works on LangChain messages and writes cache metadata through the provider integration.
+- **LangChain v1 / LangGraph:** `create_agent(..., middleware=[ctxcache.integrations.langchain.CtxCacheMiddleware()])`. The middleware works on LangChain messages and writes cache metadata through the provider integration.
 
 ### 6.2 CLI (illustrative output; real examples are generated from golden tests)
 
@@ -366,7 +366,7 @@ safe      61%      9%        30%         0.47×          6
 optimize  86%      8%         6%         0.25×          1
 ```
 
-`hearth guard --baseline traces/baseline/ --run "pytest tests/agent"` runs the application's agent tests against `FakeProvider`. It fails if any session shows a user-caused break that the baseline did not have.
+`ctxcache guard --baseline traces/baseline/ --run "pytest tests/agent"` runs the application's agent tests against `FakeProvider`. It fails if any session shows a user-caused break that the baseline did not have.
 
 ### 6.3 Trace format (`trace.jsonl`, version 1)
 
@@ -438,7 +438,7 @@ Importers for LiteLLM and Langfuse exports are best-effort: without bodies they 
 - 5 multi-session memory tasks at M5;
 - 5 mixed-difficulty tasks for switch-or-stay at M6.
 
-**Agent templates:** each task runs from a fixed system-prompt template drawn from patterns in real open-source agents. Two variants are used: "minimal" (static only) and "typical" (includes the current date and a user context block, as many real agents do). Both are recorded and reported. Hearth's numbers never come from breakers the templates do not contain.
+**Agent templates:** each task runs from a fixed system-prompt template drawn from patterns in real open-source agents. Two variants are used: "minimal" (static only) and "typical" (includes the current date and a user context block, as many real agents do). Both are recorded and reported. CtxCache's numbers never come from breakers the templates do not contain.
 
 ## 10. Plan: 10 weeks, with a kill test first
 
@@ -450,7 +450,7 @@ Importers for LiteLLM and Langfuse exports are best-effort: without bodies they 
 | M1 | 3–4 | `wrap()` in all modes for Anthropic Messages and OpenAI Responses/Chat; fingerprints, guard, planner, ledger, OTel; `report`, `diagnose`; strict flag; METRICS.md | INV-01–04, 06 (Anthropic and OpenAI), 07–11 and 13 green; contract tests green; NFR-1 measured; **decision D-09: make the repo public and tag `0.1.0a1`** |
 | M2 | 5 | Gemini adapter; `optimize`: relocation, offloading via the read tool, planned compaction; compaction study; BREAKS.md from the cause registry | INV-05, INV-06 Gemini; `optimize` ≥ `safe` on cost with success within the §10.1 rule; compaction study recorded |
 | M3 | 6 | LangGraph middleware; integration examples for all three | Mini-suite passes through each |
-| M4 | 7 | Simulator v1, `replay`, `guard` with FakeProvider; **report data frozen**; Cache Efficiency Report v1 drafted (4 frameworks × 2 providers) | Calibration ±5 points on hold-out; report reproducible by `hearth bench --report` |
+| M4 | 7 | Simulator v1, `replay`, `guard` with FakeProvider; **report data frozen**; Cache Efficiency Report v1 drafted (4 frameworks × 2 providers) | Calibration ±5 points on hold-out; report reproducible by `ctxcache bench --report` |
 | M5 | 8 | Memory v0 | INV-12; memory tasks pass |
 | M6 | 9 | Switch-or-stay; TTL optimiser; escalation; `0.1.0b1` for outsider trials | Saving on mixed tasks with success within the §10.1 rule |
 | M7 | 10 | Hardening, docs, PyPI `0.1.0`, launch | §12 checklist |
@@ -491,7 +491,7 @@ Importers for LiteLLM and Langfuse exports are best-effort: without bodies they 
 | Result | Decision |
 |---|---|
 | C or D cuts input cost ≥ 25% against A on ≥ 2 of 3 frameworks; pass rate drops by no more than 1 task in 20 (averaged over 3 runs); simulator within ±10 points; interview gate met | **Go** |
-| Cost gate met, but B already achieves the same as C | **Go, narrowed:** Hearth's value is automatic best practice plus guard and report; reword the positioning |
+| Cost gate met, but B already achieves the same as C | **Go, narrowed:** CtxCache's value is automatic best practice plus guard and report; reword the positioning |
 | A already reaches ≥ 80% read share on the "typical" template for ≥ 2 frameworks | **Narrow:** build only the guard, diagnose and report (M1 + M4); skip the M2, M5 and M6 policies |
 | Otherwise | **Stop.** Publish the honest finding (GTM handbook §13) |
 
@@ -534,7 +534,7 @@ gtm/                            GTM thread only
 ## 12. Release checklist (M7 gate)
 
 - **Tests:** all invariant tests and golden tests green; nightly contract tests green 5 nights running.
-- **Benchmark:** the Cache Efficiency Report reproduces from `hearth bench --report` on a clean machine.
+- **Benchmark:** the Cache Efficiency Report reproduces from `ctxcache bench --report` on a clean machine.
 - **Trials:** during week 9, on `0.1.0b1`, three people other than Abhranshu install it, wrap a real agent and get a report without help. Their notes go in `gtm/TRIALS.md`.
 - **Docs:** README claims each map to a `proven` row in `gtm/CLAIMS.md`.
 - **Data:** `providers.toml` has a date within 14 days of release.
@@ -545,8 +545,8 @@ gtm/                            GTM thread only
 | Risk | Signal | Response |
 |---|---|---|
 | Stock frameworks already cache well | M0 arm A read share ≥ 80% | Apply the §10.1 decision table (narrow or stop) |
-| Providers make caching foolproof (automatic layout fixes) | Provider changelogs | Hearth's value moves to decisions (compaction, memory, switching) and cross-provider proof |
-| Frameworks fix their own layouts | Issues closed upstream | Good for users; Hearth's report and guard still measure and protect; credit stays with whoever showed the numbers |
+| Providers make caching foolproof (automatic layout fixes) | Provider changelogs | CtxCache's value moves to decisions (compaction, memory, switching) and cross-provider proof |
+| Frameworks fix their own layouts | Issues closed upstream | Good for users; CtxCache's report and guard still measure and protect; credit stays with whoever showed the numbers |
 | prefixcash or similar ships automatic fixes | Its releases | Compete on integrations, simulator accuracy and the public benchmark; or contribute and partner |
 | Simulator inaccuracy | Hold-out error > ±5 points | Use only live A/B numbers publicly until fixed |
 | Offloading or compaction lowers task success | Bench success drops | Raise thresholds; keep it opt-in |

@@ -100,7 +100,7 @@ Gate commands and output tails:
 - `make check`: `81 files already formatted; mypy --strict src/ctxcache: Success: no issues found in 43 source files; 78 passed, 4 deselected`
 Numbers: no new API spend in this change. The Nov 7 night already called the models.
 What changed (user-visible first):
-- Gemini was sent `session_id`, which is Hearth's label for a conversation. Gemini rejected the call. That label is now removed before any model sees the request. `prompt_cache_key` is sent only to OpenAI.
+- Gemini was sent `session_id`, which is CtxCache's label for a conversation. Gemini rejected the call. That label is now removed before any model sees the request. `prompt_cache_key` is sent only to OpenAI.
 - Nova's second call did read the cache. The third call changed the system text, and the guard called it "too short" because the prompt counted as 1,485 tokens and the guard's floor is 2,048. The nightly Nova prompt is now long enough to clear that floor.
 Learned (for Abhranshu):
 - Run `42404875158` (2026-11-07 19:10 UTC, commit `60e4500`) passed the key check and the one-run-per-day check. `make contract` then failed both live tests.
@@ -140,7 +140,7 @@ Blocked on Abhranshu: the Gemini key for the nightly job, and a sourced Nova pri
 
 gpt-oss-120b does not report cache tokens. `amazon.nova-micro-v1:0` on the Converse API does. A wrapped observe call read 3,601 of 3,607 input tokens on the second request. There is no sourced price, so that is not yet a dollar saving.
 
-## 2026-11-02 · Nova Micro cache read, counted by Hearth
+## 2026-11-02 · Nova Micro cache read, counted by CtxCache
 Gate commands and output tails:
 - Live `ctxcache.wrap` observe, `amazon.nova-micro-v1:0`: call 1 read 0, write 3601, uncached 6, output 2. Call 2 read 3601, write 0, uncached 6, output 2.
 - Earlier direct Converse pair, same shape: write 2401, then read 2401, uncached tail 6 both times.
@@ -225,7 +225,7 @@ Blocked on Abhranshu: add repository secret `GEMINI_API_KEY`, and on PyPI turn o
 ## 2026-10-19 · M7 hardening & v0.1 release readiness: PENDING-HUMAN
 Gate commands and output tails:
 - `make check`: `72 files already formatted; mypy --strict src/ctxcache: Success: no issues found in 39 source files; 56 passed, 3 deselected in 0.81s`
-- `hearth bench --report`: `Overall Cost Reduction: 42.0%; Calibration MAE: 0.0 points; Report frozen at docs/REPORT.md`
+- `ctxcache bench --report`: `Overall Cost Reduction: 42.0%; Calibration MAE: 0.0 points; Report frozen at docs/REPORT.md`
 - `all milestone benchmarks`: `M0 Kill Test (GO), M2 Optimize (74.7% savings), M3 Frameworks (100%), M4 Report (42.0%), M5 Memory (100%), M6 Switch-or-stay (18.1% savings) all VERIFIED`
 Numbers: 56 passed (16/16 named invariants green) · 42.0% cost reduction on 20 tasks · 0.00 MAE calibration holdout · p50 0.66 ms / p99 1.08 ms at 50k tokens · 0 required external dependencies on Python 3.11+ · API spend this week $0.00
 What changed (user-visible first):
@@ -235,7 +235,7 @@ What changed (user-visible first):
 - Re-verified `src/ctxcache/data/providers.toml` with current dated sources (`2026-10-19`).
 - Confirmed zero required dependencies in core for Python 3.11+.
 Learned (for Abhranshu):
-- `tests/test_perf.py:50-65`: When benchmarking sub-millisecond CPU overhead at 50k context tokens (~200k characters across 30 messages and 10 tools), host Python garbage collection sweeps on large dictionaries can intermittently distort p99 latency numbers from ~1 ms to ~5 ms. Disabling GC exclusively across the 100 tight micro-benchmark iterations isolates the pure algorithmic overhead of Hearth's fingerprinting, ordering restoration, and guard validation (0.66 ms p50, 1.08 ms p99).
+- `tests/test_perf.py:50-65`: When benchmarking sub-millisecond CPU overhead at 50k context tokens (~200k characters across 30 messages and 10 tools), host Python garbage collection sweeps on large dictionaries can intermittently distort p99 latency numbers from ~1 ms to ~5 ms. Disabling GC exclusively across the 100 tight micro-benchmark iterations isolates the pure algorithmic overhead of CtxCache's fingerprinting, ordering restoration, and guard validation (0.66 ms p50, 1.08 ms p99).
 - `docs/REPORT.md:1-63`: Prefix caching stability across agent frameworks is a multiplicative system: if system prompts have dynamic dates (0% cache hits), fixing tool order alone cannot salvage the cache; conversely, fixing system prompt layout while letting tool ordering oscillate drops cache hits by half. Only when static system prompts, stable session context, tool definitions, and message history are compartmentalized by stability class does read share reach 48.9% full-session average and 100% on turn 2+.
 GTM-ready: Full claims ledger C-01 through C-11 backed by verified artifacts in `docs/REPORT.md`, `docs/BENCH.md`, and `docs/STATUS.md`.
 Blocked on Abhranshu: Written approval to tag `v0.1.0` and publish `ctxcache` to PyPI (CLAUDE.md stop condition).
@@ -253,8 +253,8 @@ What changed (user-visible first):
 - Added 5 pre-registered mixed-difficulty benchmark tasks in `bench/tasks/mixed.py` and benchmark runner in `bench/m6/runner.py`.
 - Bumped package version to `0.1.0b1` in `pyproject.toml` and `src/ctxcache/__init__.py` for outsider trials.
 Learned (for Abhranshu):
-- `src/ctxcache/policies/route.py:34-60`: Naively routing every sub-turn to a "cheaper" model often burns money instead of saving it. When model B is cheaper than model A ($q = p_B / p_A < 1$), switching mid-session requires model B to perform a cold write of the entire accumulated prefix at B's write multiplier $w_B$. If the remaining calls $n \le n^*$, the cold write penalty outweighs model A's warm cache read savings. Hearth's closed-form break-even formula calculates the exact inflection point in $O(1)$ and prevents premature switches.
-- `src/ctxcache/policies/route.py:120-140`: When an agent task requires a small contextual sub-action (e.g. 500-token regex extraction or JSON validation from a 20k-token repository prompt), neither staying on the expensive model nor switching the whole 20k context to a cheaper model is optimal. Hearth's `delegate` verdict runs the sub-task as an isolated lightweight session with only the 500 tokens it needs, slashing costs by up to 65% while keeping the primary model's 20k prefix cache intact.
+- `src/ctxcache/policies/route.py:34-60`: Naively routing every sub-turn to a "cheaper" model often burns money instead of saving it. When model B is cheaper than model A ($q = p_B / p_A < 1$), switching mid-session requires model B to perform a cold write of the entire accumulated prefix at B's write multiplier $w_B$. If the remaining calls $n \le n^*$, the cold write penalty outweighs model A's warm cache read savings. CtxCache's closed-form break-even formula calculates the exact inflection point in $O(1)$ and prevents premature switches.
+- `src/ctxcache/policies/route.py:120-140`: When an agent task requires a small contextual sub-action (e.g. 500-token regex extraction or JSON validation from a 20k-token repository prompt), neither staying on the expensive model nor switching the whole 20k context to a cheaper model is optimal. CtxCache's `delegate` verdict runs the sub-task as an isolated lightweight session with only the 500 tokens it needs, slashing costs by up to 65% while keeping the primary model's 20k prefix cache intact.
 - `src/ctxcache/planner.py:54-78`: Anthropic's 1-hour cache write costs 2.0x input price, while 5-minute cache writes cost 1.25x. For human-in-the-loop pauses exceeding 5 minutes, 5-minute TTL expires and forces a 1.25x rewrite on every resume. By placing 1-hour TTL specifically on the stable prefix when pauses are anticipated ($k \ge 1$), CtxCache eliminates repeat cold writes across human reviews, yielding an immediate 11.8% to 16.0% savings on pause tasks.
 GTM-ready: Unlocks claim C-11 ("Switch-or-stay saved 18.1% on mixed-difficulty tasks with no success loss").
 Blocked on Abhranshu: nothing
@@ -268,7 +268,7 @@ Numbers: 44 passed · 100% memory task pass rate across 5 pre-registered tasks (
 What changed (user-visible first):
 - Added `src/ctxcache/memory/store.py` providing SQLite `facts` table with FTS5 search, full temporal superseding (`valid_from`, `valid_to`, `superseded_by`), session snapshot isolation, and untrusted tool taint quarantine.
 - Added `src/ctxcache/memory/checks.py` enforcing synchronous write validation: 2,000 character length limit, secrets rejection (API keys, private keys, AWS tokens), and prompt injection / instruction override pattern rejection.
-- Added `src/ctxcache/memory/recall.py` providing `hearth.memory.remember`, `hearth.memory.recall`, and `hearth.memory.pin`.
+- Added `src/ctxcache/memory/recall.py` providing `ctxcache.memory.remember`, `ctxcache.memory.recall`, and `ctxcache.memory.pin`.
 - Guaranteed cache-friendly memory placement (`INV-12`): pinned facts load once at session start into SESSION prefix, while mid-session writes are placed into turn tail (volatile) without mutating active session prefix cache.
 - Added 5 pre-registered multi-session benchmark tasks in `bench/tasks/memory.py` and benchmark runner in `bench/m5/runner.py`.
 Learned (for Abhranshu):
@@ -281,21 +281,21 @@ Blocked on Abhranshu: nothing
 ## 2026-10-19 · M4 simulator & replay CLI: VERIFIED
 Gate commands and output tails:
 - `make check`: `58 files already formatted; mypy --strict src/ctxcache: Success: no issues found in 32 source files; 38 passed, 2 skipped, 3 deselected in 1.27s`
-- `hearth bench --report`: `[Cache Efficiency Report generated and frozen at .../docs/REPORT.md]; Overall Cost Reduction: 42.0%; Calibration MAE: 0.0 points`
+- `ctxcache bench --report`: `[Cache Efficiency Report generated and frozen at .../docs/REPORT.md]; Overall Cost Reduction: 42.0%; Calibration MAE: 0.0 points`
 - `python -m ctxcache.bench.runner --m4 --verify`: `{"milestone": "M4", "gate_verified": true, "overall_savings_pct": 42.0, "calibration_holdout_mae_points": 0.0, "cause_counts": {"volatile_in_prefix": 160}}; [VERIFICATION PASSED] M4 Benchmark Gate: VERIFIED`
-- `hearth replay`: `canonical columns (mode, read, written, uncached, input cost, user-caused breaks) verified in test_cli_replay`
-- `hearth guard`: `regression break detection verified in test_cli_guard`
+- `ctxcache replay`: `canonical columns (mode, read, written, uncached, input cost, user-caused breaks) verified in test_cli_replay`
+- `ctxcache guard`: `regression break detection verified in test_cli_guard`
 Numbers: 38 passed (2 skipped) · 42.0% overall cost reduction across 4 frameworks × 2 providers (20 tasks, 160 sessions) · hold-out calibration error 0.00 points MAE (target <= 5.0) · 100% task pass rate · API spend this week $0.00
 What changed (user-visible first):
 - Added `FakeProvider` in `src/ctxcache/testing.py` providing deterministic, network-free mock clients for Google Gemini, OpenAI, and Anthropic with realistic usage token estimation matching `providers.toml` rules.
-- Added `hearth replay <trace_file>` CLI subcommand replaying JSONL trace files through `CacheSimulator` under `observe`, `safe`, and `optimize` policies, computing exact `Decimal` cost ratios and break counts.
-- Added `hearth guard --baseline <path> --run "<cmd>"` CLI subcommand detecting prefix break regressions in automated test suites and failing CI if new user-caused breaks appear.
+- Added `ctxcache replay <trace_file>` CLI subcommand replaying JSONL trace files through `CacheSimulator` under `observe`, `safe`, and `optimize` policies, computing exact `Decimal` cost ratios and break counts.
+- Added `ctxcache guard --baseline <path> --run "<cmd>"` CLI subcommand detecting prefix break regressions in automated test suites and failing CI if new user-caused breaks appear.
 - Reconciled simulator token accounting to strictly enforce `INV-06` (`read + write + uncached == total_input`).
-- Generated and froze canonical `docs/REPORT.md` (Cache Efficiency Report v1) covering 4 frameworks × 2 providers on 20 tasks, reproducible via `hearth bench --report`.
+- Generated and froze canonical `docs/REPORT.md` (Cache Efficiency Report v1) covering 4 frameworks × 2 providers on 20 tasks, reproducible via `ctxcache bench --report`.
 Learned (for Abhranshu):
 - `src/ctxcache/testing.py:120-170`: `FakeProvider` allows agent developers to test their applications offline with 100% deterministic prompt cache measurements. Instead of spending money on real provider API tokens in CI, `FakeProvider` returns SDK-compliant responses with accurate cache usage metadata (`read`, `write`, `uncached`) derived directly from `providers.toml`.
 - `src/ctxcache/replay.py:40-95`: Replay analysis shows that unmanaged typical agent prompts incur near-zero cache reads (0.0% read share) due to volatile runtime metadata (timestamps, dynamic dates) prepended to the system prompt. Under `optimize` mode, relocating these volatile lines to the user message tail immediately unlocks a 48.9% full-session average read share (and 100% read share on turn 2 post-warmup), reducing overall input cost by over 40%.
-- `src/ctxcache/cli.py:165-215`: `hearth guard` operates as a prompt-cache regression linter for CI: by intercepting traces generated during test runs via `CTXCACHE_TRACE_DIR`, it compares break causes against a baseline. If a commit modifies a system prompt dynamically or reorders tools, `hearth guard` catches the break before it deploys to production.
+- `src/ctxcache/cli.py:165-215`: `ctxcache guard` operates as a prompt-cache regression linter for CI: by intercepting traces generated during test runs via `CTXCACHE_TRACE_DIR`, it compares break causes against a baseline. If a commit modifies a system prompt dynamically or reorders tools, `ctxcache guard` catches the break before it deploys to production.
 GTM-ready: Unlocks claims C-07 ("Cache Efficiency Report v1 frozen across 4 frameworks × 2 providers on 20 tasks") and C-08 ("Deterministic offline testing with FakeProvider and CI cache break detection via ctxcache guard").
 Blocked on Abhranshu: nothing
 
@@ -310,7 +310,7 @@ What changed (user-visible first):
 - Added `CtxCacheMiddleware` in `src/ctxcache/integrations/langgraph.py` (and alias `src/ctxcache/integrations/langchain.py`) providing drop-in middleware for LangGraph state graphs and LangChain callbacks: preserves input message object references in `observe` mode, restores first-seen tool order in `safe` mode, relocates volatile timestamps in `optimize` mode, and checks `PrefixGuard`.
 - Added `wrap_pydantic_ai_client` and `CtxCachePydanticAIModel` in `src/ctxcache/integrations/pydantic_ai.py` enabling zero-boilerplate prompt caching for Pydantic AI models.
 - Added `set_default_openai_client`, `get_default_openai_client`, and `wrap_agents_client` in `src/ctxcache/integrations/openai_agents.py` seamlessly intercepting calls made by OpenAI Agents SDK.
-- Exported all integration adapters cleanly from `hearth.integrations` without requiring external framework dependencies in core (`pyproject.toml` remains zero external dependencies).
+- Exported all integration adapters cleanly from `ctxcache.integrations` without requiring external framework dependencies in core (`pyproject.toml` remains zero external dependencies).
 - Created mini-suite tests in `tests/test_integrations.py` and benchmark verification runner in `bench/m3/runner.py`.
 Learned (for Abhranshu):
 - `src/ctxcache/integrations/langgraph.py:47-52`: In LangGraph, message histories frequently contain framework-specific dataclasses (`HumanMessage`, `AIMessage`). In `observe` mode, CtxCache must strictly pass these objects through by reference without converting them to dicts (`INV-01`), whereas in `safe`/`optimize` mode it converts and normalizes them for layout inspection and tool ordering.
@@ -343,7 +343,7 @@ Blocked on Abhranshu: nothing
 Gate commands and output tails:
 - `make check`: `39 files already formatted; mypy --strict src/ctxcache: Success: no issues found in 21 source files; 23 passed, 3 skipped, 3 deselected in 0.58s`
 - `pytest -v tests/`: `24 passed, 5 skipped in 0.42s; INV-01, 02, 03, 04, 06 (Anthropic/OpenAI/Gemini), 07, 08, 09, 10, 11, 13 green`
-- `hearth report --help`: `usage: ctxcache report [-h] --session SESSION [--ledger LEDGER]`
+- `ctxcache report --help`: `usage: ctxcache report [-h] --session SESSION [--ledger LEDGER]`
 - `NFR-1 latency benchmark`: `[NFR-1 at ~50k tokens] p50: 0.763 ms (budget <= 2.0 ms), p99: 1.247 ms (budget <= 5.0 ms)`
 Numbers: 24 passed (5 future milestone tests skipped) · read share 49.4% · cost ratio 0.565 · TTFT p50 0.38s (cached) vs 1.35s (uncached) · API spend this week $0.00
 What changed (user-visible first):
@@ -352,13 +352,13 @@ What changed (user-visible first):
 - Implemented provider adapters for Google Gemini, OpenAI, and Anthropic normalizing usage tokens and strictly reconciling `read + write + uncached == total_input` (`INV-06`).
 - Implemented `CachePlan` and `plan_breakpoints()` enforcing provider limits (max 4 breakpoints for Anthropic, 1-hour TTL preceding 5-minute entries, zero breakpoints for one-shot calls) (`INV-11`).
 - Implemented SQLite session/call summary ledger persisting token metrics and exact `Decimal` costs without logging prompt text (`INV-09`, `INV-13`).
-- Added CLI diagnostics `hearth report --session <id>` and `hearth diagnose <trace.jsonl>` providing actionable cause explanations and remediation instructions.
+- Added CLI diagnostics `ctxcache report --session <id>` and `ctxcache diagnose <trace.jsonl>` providing actionable cause explanations and remediation instructions.
 - Implemented OpenTelemetry span export with GenAI semantic conventions (`gen_ai.usage.cache_read.input_tokens`, etc.) (`D-10`) and documented canonical metrics in `docs/METRICS.md`.
 Learned (for Abhranshu):
 - `src/ctxcache/guard.py:14-30`: Providers invalidate prompt cache prefixes on tool schema changes, but reordering identical tools is an artificial break caused by dictionary non-determinism. Sorting tools into their first-seen order preserves the prefix byte-for-byte across turns without modifying semantics.
 - `src/ctxcache/adapters/anthropic.py:21-35`: Anthropic reports `cache_read_input_tokens` and `cache_creation_input_tokens` as components of `input_tokens`. Uncached tokens must be computed as `input_tokens - read - write`. In contrast, OpenAI reports `cached_tokens` inside `prompt_tokens_details`, where `prompt_tokens` is already the gross count.
 - `src/ctxcache/planner.py:53-78`: Anthropic enforces a strict hard ceiling of 4 cache breakpoints per request. Placing breakpoints on every message in long dialogues triggers API validation errors. Breakpoints must be rationed: one on stable tools/system, one on the established multi-turn session boundary, and long-TTL (1 hour) entries must precede short-TTL (5 min) entries.
-GTM-ready: Unlocks claims C-03 ("`hearth wrap()` drops into existing code in one line with zero external dependencies") and C-04 ("Detects and explains 100% of prompt cache invalidations before or as they occur").
+GTM-ready: Unlocks claims C-03 ("`ctxcache.wrap()` drops into existing code in one line with zero external dependencies") and C-04 ("Detects and explains 100% of prompt cache invalidations before or as they occur").
 Blocked on Abhranshu: **D-09 decision at M1 gate**: whether to make the repository public and tag `0.1.0a1` now, or wait until official release.
 
 ## 2026-10-19 · M0 kill test: PENDING-HUMAN

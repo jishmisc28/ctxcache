@@ -2,7 +2,7 @@
 
 Generated from `src/ctxcache/data/breaks.yaml` per `BUILD_HANDBOOK.md` §5.2 and Milestone 2.
 
-Hearth's `PrefixGuard` inspects successive API calls in a session, compares prompt prefix tokens against prior turns, and evaluates divergence causes **in strict precedence order** (first match wins).
+CtxCache's `PrefixGuard` inspects successive API calls in a session, compares prompt prefix tokens against prior turns, and evaluates divergence causes **in strict precedence order** (first match wins).
 
 ---
 
@@ -54,7 +54,7 @@ When evaluating developer metrics:
 ### 3. `ttl_expired`
 - **Condition**: Idle duration between consecutive turn invocations exceeds provider cache TTL (e.g. 5 minutes).
 - **Impact**: Cold cache miss on all prefix tokens.
-- **Remediation**: Use Hearth's 1-hour TTL on stable breakpoints or application `s.expect_pause()` hints before long human approvals.
+- **Remediation**: Use CtxCache's 1-hour TTL on stable breakpoints or application `s.expect_pause()` hints before long human approvals.
 
 ### 4. `provider_miss`
 - **Condition**: Exact byte-identical prefix submitted within TTL window, yet provider reported `read_tokens == 0`.

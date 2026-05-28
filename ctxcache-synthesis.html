@@ -266,7 +266,7 @@
   <p class="kicker">CtxCache · synthesis · 20 October 2026</p>
   <h1>What this project is, in language you can reason with</h1>
   <p class="lede">CtxCache is a Python library that sits inside an agent’s own process, on the path between the agent’s code and the model company. On every call it keeps the stable beginning of the prompt identical, records what the cache did, and — only if you ask — moves the bits that would have broken that cache.</p>
-  <p class="meta">Package <code>ctxcache</code>, import <code>hearth</code>, version <code>0.1.0b1</code>. Public repo <code>jishmisc28/ctxcache</code>. Tag on GitHub: <code>0.1.0a1</code>. Not on PyPI. Written 19 October 2026. This page is a reading copy of the code and the status log, dated 20 October 2026.</p>
+  <p class="meta">Package <code>ctxcache</code>, import <code>ctxcache</code>, version <code>0.1.0b1</code>. Public repo <code>jishmisc28/ctxcache</code>. Tag on GitHub: <code>0.1.0a1</code>. Not on PyPI. Written 19 October 2026. This page is a reading copy of the code and the status log, dated 20 October 2026.</p>
 
   <h2 id="idea">The idea</h2>
   <p>An agent is a loop. Step 30 sends the system instructions, the tool definitions, and every earlier message again, then adds one new piece. The model company already saw the beginning of that text. If the beginning is byte-for-byte the same, they charge about a tenth of the normal input price for it, and the first token often arrives sooner. If one byte near the start changes, they charge full price for everything after it.</p>
@@ -403,7 +403,7 @@
   <div class="entity">
     <h3>Simulator, fake provider, bench, replay, guard</h3>
     <span class="file">src/ctxcache/sim/ · src/ctxcache/testing.py · src/ctxcache/replay.py · src/ctxcache/cli.py</span>
-    <p><code>FakeProvider</code> returns canned SDK-shaped responses and invents usage numbers from the same rules as <code>providers.toml</code>, so tests need no API key. The simulator replays a trace and predicts read share. <code>hearth replay</code> runs a trace through observe, safe, and optimize and prints cost. <code>hearth guard</code> fails a CI run when a new user-caused break appears against a baseline. <code>hearth report</code> and <code>hearth diagnose</code> read a session and explain the cause.</p>
+    <p><code>FakeProvider</code> returns canned SDK-shaped responses and invents usage numbers from the same rules as <code>providers.toml</code>, so tests need no API key. The simulator replays a trace and predicts read share. <code>ctxcache replay</code> runs a trace through observe, safe, and optimize and prints cost. <code>ctxcache guard</code> fails a CI run when a new user-caused break appears against a baseline. <code>ctxcache report</code> and <code>ctxcache diagnose</code> read a session and explain the cause.</p>
   </div>
   <div class="entity">
     <h3>Framework adapters</h3>
@@ -442,7 +442,7 @@
       <tr><td class="status wait">M7</td><td>License, README, a latency microbench, providers file re-dated.</td><td>Docs are done. Release is waiting. See the last section.</td></tr>
     </tbody>
   </table>
-  <p>Overhead measured in-process, with garbage collection paused for the timing loop: median 0.66 ms and 99th percentile 1.08 ms at about 50,000 tokens of context. The budget was 2 ms and 5 ms. That number is CPU time inside Hearth, not time-to-first-token from a provider.</p>
+  <p>Overhead measured in-process, with garbage collection paused for the timing loop: median 0.66 ms and 99th percentile 1.08 ms at about 50,000 tokens of context. The budget was 2 ms and 5 ms. That number is CPU time inside CtxCache, not time-to-first-token from a provider.</p>
 
   <h2 id="made">How it was made</h2>
   <ul>
@@ -459,9 +459,9 @@
     <li>Wrap a Gemini, OpenAI, or Anthropic client and leave the request untouched while recording cache accounting.</li>
     <li>Wrap it in safe mode and have tool order restored when the same tools come back shuffled.</li>
     <li>Wrap it in optimize mode and have timestamp-like lines moved out of the system prompt.</li>
-    <li>Ask, after a session, what broke the prefix and what it cost, with <code>hearth report</code> and <code>hearth diagnose</code>.</li>
+    <li>Ask, after a session, what broke the prefix and what it cost, with <code>ctxcache report</code> and <code>ctxcache diagnose</code>.</li>
     <li>Replay a trace offline through the three modes.</li>
-    <li>Fail a test run when a new user-caused break shows up, with <code>hearth guard</code>.</li>
+    <li>Fail a test run when a new user-caused break shows up, with <code>ctxcache guard</code>.</li>
     <li>Store facts that supersede instead of overwrite, and that refuse secrets and instruction-override text.</li>
     <li>Ask whether staying, switching, or delegating is the cheaper next step, given the price table and the remaining calls.</li>
     <li>Drop the same wrap into LangGraph, Pydantic AI, or the OpenAI Agents SDK without those libraries becoming dependencies of CtxCache itself.</li>
@@ -469,7 +469,7 @@
 
   <h2 id="numbers">How to read the numbers</h2>
   <div class="callout amber">
-    <p>The 42% cost reduction, the 49% read share, the 18% routing saving, and the 0.00 calibration error are outputs of Hearth’s own simulator and fake provider. <code>docs/BENCH.md</code> records $0.00 of provider spend. No live kill test has been logged. The calibration error of zero is the simulator agreeing with itself.</p>
+    <p>The 42% cost reduction, the 49% read share, the 18% routing saving, and the 0.00 calibration error are outputs of CtxCache’s own simulator and fake provider. <code>docs/BENCH.md</code> records $0.00 of provider spend. No live kill test has been logged. The calibration error of zero is the simulator agreeing with itself.</p>
   </div>
   <p>The report file also prints the same read share and the same dollar figures for every framework row. That is what you get when one layout scenario is scored four times, not when four real agents were run on two companies’ APIs. The handbook’s kill test was three live runs per task per arm, on named models, with the spend written down. That run is the measurement that would turn the 42% into a claim.</p>
   <p>The local tests are a different kind of evidence, and they are real: the identity rules, the usage arithmetic, the fail-open path, and the decimal costs were executed on 19 October and passed. They prove the library behaves as specified against fixtures. They do not prove a provider bill moved.</p>

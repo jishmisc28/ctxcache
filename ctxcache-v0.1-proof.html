@@ -1036,9 +1036,9 @@ ls: .github/workflows: No such file or directory</pre>
   2. `minimal`: Hand-cleaned prompt layout with static prefix and dynamic turn context in user messages.
 - **Four Experimental Arms:**
   - **Arm A (`stock`)**: Unmodified agent template (`observe` mode).
-  - **Arm B (`hearth-safe`)**: `ctxcache.wrap(client, mode="safe")` — deterministic tool order restoration + cache breakpoints, zero content modification.
+  - **Arm B (`ctxcache-safe`)**: `ctxcache.wrap(client, mode="safe")` — deterministic tool order restoration + cache breakpoints, zero content modification.
   - **Arm C (`naive-compact`)**: Summarizes conversation every 5 turns.
-  - **Arm D (`hearth-optimize`)**: `ctxcache.wrap(client, mode="optimize")` — relocates volatile system fields to turn tail, offloads large tool outputs, and protects prefix.
+  - **Arm D (`ctxcache-optimize`)**: `ctxcache.wrap(client, mode="optimize")` — relocates volatile system fields to turn tail, offloads large tool outputs, and protects prefix.
 - **Task Suite:** 20 multi-turn software engineering &amp; tool-use tasks (8–20 turns each, 3 runs per cell).
 
 ---
