@@ -17,11 +17,11 @@
 
 ## Proof video
 
-One real Kimi K3 run: the standing document, no-cache vs cached cost, the break when the document changes, and the receipt — **paid $0.95546138** against **$2.22368850** uncached (**saved $1.26822712**). Source: [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json). Silent cut.
+One real Kimi K3 run: the standing document, no-cache vs cached cost, the break when the document changes, and the receipt — **paid $0.95546138** against **$2.22368850** uncached (**saved $1.26822712**). Source: [`bench/live/2026-11-12-broad.json`](bench/live/2026-11-12-broad.json).
 
 ![CtxCache measured proof](docs/media/ctxcache-cost-proof-preview.gif)
 
-[Full silent MP4 (122s)](docs/media/ctxcache-cost-proof.mp4) · [Release download](https://github.com/jishmisc28/ctxcache/releases/download/proof-video/ctxcache-cost-proof.mp4) · [Live session write-up](docs/REPORT.md)
+[Full MP4 (~81s)](docs/media/ctxcache-cost-proof.mp4) · [Release download](https://github.com/jishmisc28/ctxcache/releases/download/proof-video/ctxcache-cost-proof.mp4) · [Live session write-up](docs/REPORT.md)
 
 An embeddable context engine that keeps an AI agent's prompt cache warm and proves it with measurements.
 
