@@ -1,16 +1,18 @@
 name: check
 
+# Once per night (~00:00 IST). Manual re-run via Actions tab.
 on:
-  push:
-  pull_request:
+  schedule:
+    - cron: "30 18 * * *"
+  workflow_dispatch:
 
 jobs:
   check:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

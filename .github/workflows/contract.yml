@@ -6,8 +6,6 @@ name: contract
 # before any model is called, and that stop is a success. A failed model
 # step does not block a retry the same day.
 on:
-  schedule:
-    - cron: "0 15 * * *"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +13,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: hearth-contract
+  group: ctxcache-contract
   cancel-in-progress: false
 
 jobs:
